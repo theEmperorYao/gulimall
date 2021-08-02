@@ -1,0 +1,27 @@
+POST http://localhost:88/api/product/category/delete
+Content-Type: application/json
+
+[
+  1433
+]
+
+
+###
+
+POST http://localhost:88/api/product/category/update/sort
+Content-Type: application/json
+
+[
+  {
+    "catId": 2,
+    "catLevel": 1,
+    "parentCid": 0,
+    "sort": 10
+  },
+  {
+    "catId": 3,
+    "catLevel": 1,
+    "parentCid": 0,
+    "sort": 20
+  }
+]

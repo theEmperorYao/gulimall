@@ -1,0 +1,40 @@
+/**
+  * Copyright 2020 bejson.com 
+  */
+package com.atguigu.gulimall.product.vo.generated;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+/**
+ * Auto-generated: 2020-10-08 7:28:36
+ *
+ * @author bejson.com (i@bejson.com)
+ * @website http://www.bejson.com/java2pojo/
+ */
+@Data
+public class Skus {
+
+    private List<Attr> attr;
+    private String skuName;
+    private BigDecimal price;
+    private String skuTitle;
+    private String skuSubtitle;
+    private List<Images> images;
+    private List<String> descar;
+    private int fullCount;
+    /**
+     * 折扣
+     */
+    private BigDecimal discount;
+    private int countStatus;
+    /**
+     * 满减价格
+     */
+    private BigDecimal fullPrice;
+    private BigDecimal reducePrice;
+    private int priceStatus;
+    private List<MemberPrice> memberPrice;
+
+}
