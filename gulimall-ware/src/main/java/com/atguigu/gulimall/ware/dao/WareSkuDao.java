@@ -5,8 +5,10 @@ import com.atguigu.gulimall.ware.vo.SpuHasStockVo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 商品库存
@@ -24,5 +26,8 @@ public interface WareSkuDao extends BaseMapper<WareSkuEntity> {
 
 
     Long getSkuStock(Long skuId);
+
+    @Select("SELECT sku_id, SUM(stock - stock_locked) FROM wms_ware_sku GROUP BY sku_id")
+    Map<Long, Long> getSkuStock2();
 
 }

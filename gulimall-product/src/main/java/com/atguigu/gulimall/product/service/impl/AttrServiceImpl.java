@@ -12,7 +12,9 @@ import com.atguigu.gulimall.product.service.AttrGroupService;
 import com.atguigu.gulimall.product.service.CategoryService;
 import com.atguigu.gulimall.product.vo.AttrRespVO;
 import com.atguigu.gulimall.product.vo.AttrVO;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.google.common.base.Function;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -270,7 +273,18 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
     public List<Long> selectSearchAttrIds(List<Long> attrIds) {
         // SELECT attr_id FROM pms_attr WHERE id In (?) and search_type=1;
         List<Long> searchAttrIds = baseMapper.selectSearchAttrIds(attrIds);
+
+
+//        LambdaQueryWrapper<AttrEntity> wrapper = new QueryWrapper<AttrEntity>().lambda()
+//                .in(attrEntity -> attrEntity.getAttrId(), attrIds)
+//                .and(r -> r.eq(AttrEntity::getSearchType, 1))
+//                .select(AttrEntity::getAttrId);
+//
+//        List<AttrEntity> attrEntities = baseMapper.selectList(wrapper);
+//        List<Long> collect = attrEntities.stream().map(AttrEntity::getAttrId).collect(toList());
+
         return searchAttrIds;
+//        return collect;
 
     }
 

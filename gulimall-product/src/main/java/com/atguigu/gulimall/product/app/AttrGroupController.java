@@ -1,6 +1,5 @@
-package com.atguigu.gulimall.product.controller;
+package com.atguigu.gulimall.product.app;
 
-import java.rmi.MarshalledObject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
