@@ -13,7 +13,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableFeignClients(basePackages = {"com.atguigu.gulimall.product.feign"})
 @EnableDiscoveryClient
 //告诉MyBatisPlusMapper接口都在哪里呢
-@MapperScan("com.atguigu.gulimall.product.dao")
+//@MapperScan("com.atguigu.gulimall.product.dao")
 @SpringBootApplication
 public class GulimallProductApplication {
 
