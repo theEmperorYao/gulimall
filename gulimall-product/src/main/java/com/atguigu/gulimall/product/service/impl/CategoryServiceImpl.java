@@ -163,7 +163,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 //        return null;
     }
 
-    @Cacheable(value = {"catagory"}, key = "#root.method.name")
+//    @Cacheable(value = {"catagory"}, key = "#root.method.name")
     @Override
     public Map<String, List<Catalog2Vo>> getCatalogJson() {
 
@@ -173,7 +173,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         List<CategoryEntity> category = getParent_cid(selectList, 0L);
 
         //2、封装数据
-        Map<String, List<Catalog2Vo>> parent_cid = category.stream().collect(Collectors.toMap(k -> k.getCatId().toString(), v -> {
+        Map<String, List<Catalog2Vo>> catelogMap = category.stream().collect(Collectors.toMap(k -> k.getCatId().toString(), v -> {
             //1、查到这个一级分类下的所有二级分类
             List<CategoryEntity> categoryEntities = getParent_cid(selectList, v.getCatId());
 
@@ -201,7 +201,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
             return catalog2Vos;
         }));
 
-        return parent_cid;
+        return catelogMap;
 
     }
 

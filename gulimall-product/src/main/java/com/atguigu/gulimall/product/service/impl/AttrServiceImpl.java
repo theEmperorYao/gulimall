@@ -272,20 +272,10 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
     @Override
     public List<Long> selectSearchAttrIds(List<Long> attrIds) {
         // SELECT attr_id FROM pms_attr WHERE id In (?) and search_type=1;
-        List<Long> searchAttrIds = baseMapper.selectSearchAttrIds(attrIds);
-
-
-//        LambdaQueryWrapper<AttrEntity> wrapper = new QueryWrapper<AttrEntity>().lambda()
-//                .in(attrEntity -> attrEntity.getAttrId(), attrIds)
-//                .and(r -> r.eq(AttrEntity::getSearchType, 1))
-//                .select(AttrEntity::getAttrId);
-//
-//        List<AttrEntity> attrEntities = baseMapper.selectList(wrapper);
-//        List<Long> collect = attrEntities.stream().map(AttrEntity::getAttrId).collect(toList());
-
+//        List<Long> searchAttrIds = baseMapper.selectSearchAttrIds(attrIds);
+        QueryWrapper<AttrEntity> wrapper = new QueryWrapper<AttrEntity>().select("attr_id").in("attr_id", attrIds).eq("search_type", 1);
+        List<Long> searchAttrIds = baseMapper.selectList(wrapper).stream().map(AttrEntity::getAttrId).collect(toList());
         return searchAttrIds;
-//        return collect;
-
     }
 
 

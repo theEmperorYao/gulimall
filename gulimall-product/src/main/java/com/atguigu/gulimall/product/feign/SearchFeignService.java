@@ -18,5 +18,7 @@ import java.util.List;
 public interface SearchFeignService {
 
     @PostMapping("/search/save/product")
-    R productStatusUp(@RequestBody List<SkuEsModel> skuEsModels);
+    default R productStatusUp(@RequestBody List<SkuEsModel> skuEsModels) {
+        return null;
+    }
 }
