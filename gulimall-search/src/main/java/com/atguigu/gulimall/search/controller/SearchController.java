@@ -15,6 +15,6 @@ public class SearchController {
     @GetMapping("/list.html")
     public String listPage() {
         System.out.println("跳转到list.html");
-        return "list";
+        return "index";
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
@@ -97,18 +98,16 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
      * @param category
      * @CacheEvict：失效模式
      */
-
-
 //    @Caching(evict={
 //            @CacheEvict(value = {"catagory"}, key = "'getLevel1Categorys'"),
 //            @CacheEvict(value = {"catagory"}, key = "'getCatalogJson'")
 //    })
-    @CacheEvict(value = {"catagory"}, allEntries = true)
+    @CacheEvict(value = {"category"},allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void updateCascade(CategoryEntity category) {
         this.updateById(category);
-        categoryBrandRelationDao.updateCategory(category.getCatId(), category.getName());
+        categoryBrandRelationDao.updateCategory(category.getCatId(), category.getName ());
         //同时修改缓存中的数据，
         //redis.del('catalogJSON'),等待下次查询时更新
     }
@@ -153,7 +152,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
      * @return
      */
 
-    @Cacheable(value = {"catagory"}, key = "#root.method.name", sync = true)
+    @Cacheable(value = {"category"}, key = "#root.method.name", sync = true)
     @Override
     public List<CategoryEntity> getLevel1Categorys() {
         System.out.println("getLevel1Categorys......");
@@ -163,7 +162,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 //        return null;
     }
 
-//    @Cacheable(value = {"catagory"}, key = "#root.method.name")
+    @Cacheable(value = {"catagory"}, key = "#root.method.name")
     @Override
     public Map<String, List<Catalog2Vo>> getCatalogJson() {
 
@@ -229,7 +228,8 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         if (StringUtils.isEmpty(catalogJSON)) {
             //2、缓存中没有，查询数据库
             System.out.println("缓存不命中。。。。将要查询数据库。。。。");
-            Map<String, List<Catalog2Vo>> catalogJsonFromDb = getCatalogJsonFromDbWithRedissonLock();
+//            Map<String, List<Catalog2Vo>> catalogJsonFromDb = getCatalogJsonFromDbWithRedissonLock();
+            Map<String, List<Catalog2Vo>> catalogJsonFromDb = getCatalogJsonFromDbWithRedisLock();
 
 
             return catalogJsonFromDb;
@@ -321,7 +321,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
     }
 
-    private Map<String, List<Catalog2Vo>> getDataFromDB() {
+    public Map<String, List<Catalog2Vo>> getDataFromDB() {
         //得到锁以后应该再去缓存中确定一次，如果没有才需要继续查询
         String catalogJSON = stringRedisTemplate.opsForValue().get("catalogJSON");
         if (StringUtils.isNotEmpty(catalogJSON)) {
@@ -382,9 +382,18 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         //1、synchronized (this)：Springboot所有的组件在容器中都是单例的，所以即使有100万并发进来，
         // 调CategoryServiceImpl的这个方法，这个service只有一个实例对象，this是单例的，相当于100个请求用的是同一个this，就能锁住了
 
+        String catalogJSON = stringRedisTemplate.opsForValue().get("catalogJSON");
+        if (StringUtils.isNotEmpty(catalogJSON)) {
+            //缓存不为null,直接返回，
+            Map<String, List<Catalog2Vo>> result = JSON.parseObject(catalogJSON, new TypeReference<Map<String, List<Catalog2Vo>>>() {
+            });
+            System.out.println("缓存命中。。。。直接返回。。。。");
+            return result;
+        }
+
         //todo 本地锁，synchronized，JUC（lock）在分布式情况下，想要锁住所有，必须使用分布式锁，
         synchronized (this) {
-
+            System.out.println("缓存不命中。。。。将要查询数据库。。。。");
             //得到锁以后应该再去缓存中确定一次，如果没有才需要继续查询
             return getDataFromDB();
         }

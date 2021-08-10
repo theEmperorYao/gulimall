@@ -52,45 +52,49 @@ public class IndexController {
         //最大的返回对象是一个json对象，说明他是一个map，map就是一个json对象，所以返回类型为一个map
         //不能写Vo，因为他的key都不确定，
         Map<String, List<Catalog2Vo>> catalogJson = categoryService.getCatalogJson();
+//        Map<String, List<Catalog2Vo>> catalogJson = categoryService.getDataFromDB();
+//        Map<String, List<Catalog2Vo>> catalogJson = categoryService.getCatalogJsonFromDbWithLocalLock();
+//        Map<String, List<Catalog2Vo>> catalogJson = categoryService.getCatalogJson2();
         return catalogJson;
+
     }
 
-//    @ResponseBody
-//    @GetMapping("/hello")
-//    public String hello() {
-//        //1、获取同一把锁，只要锁的名字一样，就是同一把锁，
-//        RLock lock = redisson.getLock("my-lock");
-//        //2、加锁
-//        //阻塞式等待，默认加的锁都是30秒
-////        lock.lock();
-//        //1)、锁的自动续期，如果业务超长，运行期间自动给锁续上30s,不用担心业务时间长，锁自动过期被删掉
-//        //2)、加锁的业务只要运行完成，就不会给当前续期，即使不手动删除解锁，锁默认在30s以后自动删除。
-//
-//        //10秒自动解锁，自动解锁时间一定要大于业务的执行的时间
-//        lock.lock(10, TimeUnit.SECONDS);
-//        // 问题：在锁时间到了以后，不会自动续期
-//        //1、如果我们传递了锁的超时时间，就发送给redis执行脚本，进行占锁，默认超时就是我们指定的时间
-//        //2、如果我们未指定锁的超时时间，就使用 30 * 1000 【看门狗lockWatchdogTimeout的默认时间】
-//        // 只要占锁成功，就会启动一个定时任务【重新给锁设定过期时间，新的过期时间就是看门狗的默认时间】,每隔10s自动续期，续成30s
-//        // internalLockLeaseTime / 3【看门狗时间】/3,10s
-//
-//        //最佳实战
-//        //1) lock.lock(10, TimeUnit.SECONDS);省掉了整个续期操作，手动解锁
-//        try {
-//            System.out.println("加锁成功，执行业务" + Thread.currentThread().getId());
-//            Thread.sleep(30000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        } finally {
-//            //3、解锁 假设解锁代码没有运行，redis会不会出现死锁
-//            System.out.println(Thread.currentThread().getId() + "释放锁");
-//            lock.unlock();
-//        }
-//        return "hello";
-//    }
+    @ResponseBody
+    @GetMapping("/hello")
+    public String hello() {
+        //1、获取同一把锁，只要锁的名字一样，就是同一把锁，
+        RLock lock = redisson.getLock("my-lock");
+        //2、加锁
+        //阻塞式等待，默认加的锁都是30秒
+//        lock.lock();
+        //1)、锁的自动续期，如果业务超长，运行期间自动给锁续上30s,不用担心业务时间长，锁自动过期被删掉
+        //2)、加锁的业务只要运行完成，就不会给当前续期，即使不手动删除解锁，锁默认在30s以后自动删除。
+
+        //10秒自动解锁，自动解锁时间一定要大于业务的执行的时间
+        lock.lock(30, TimeUnit.SECONDS);
+        // 问题：在锁时间到了以后，不会自动续期
+        //1、如果我们传递了锁的超时时间，就发送给redis执行脚本，进行占锁，默认超时就是我们指定的时间
+        //2、如果我们未指定锁的超时时间，就使用 30 * 1000 【看门狗lockWatchdogTimeout的默认时间】
+        // 只要占锁成功，就会启动一个定时任务【重新给锁设定过期时间，新的过期时间就是看门狗的默认时间】,每隔10s自动续期，续成30s
+        // internalLockLeaseTime / 3【看门狗时间】/3,10s
+
+        //最佳实战
+        //1) lock.lock(10, TimeUnit.SECONDS);省掉了整个续期操作，手动解锁
+        try {
+            System.out.println("加锁成功，执行业务" + Thread.currentThread().getId());
+            Thread.sleep(20000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            //3、解锁 假设解锁代码没有运行，redis会不会出现死锁
+            System.out.println(Thread.currentThread().getId() + "释放锁");
+            lock.unlock();
+        }
+        return "hello";
+    }
 
     /**
-     * 保证一定能读到最新数据，修改期间，写锁是一个排他锁（互斥锁,共享锁）。读锁是一个共享锁
+     * 保证一定能读到最新数据，修改期间，写锁是一个排他锁（互斥锁）。读锁是一个共享锁
      * 写锁没释放，读就必须等待
      * <p>
      * 读 + 读 ：相当于无锁，并发读，只会在redis中记录好，所有当前的读锁，他们都会同时加锁成功
@@ -194,12 +198,6 @@ public class IndexController {
         RCountDownLatch door = redisson.getCountDownLatch("door");
         door.countDown();
         return id + "号走了";
-    }
-
-    @ResponseBody
-    @RequestMapping("/hello")
-    public String hello() {
-        return "Hello";
     }
 
 
