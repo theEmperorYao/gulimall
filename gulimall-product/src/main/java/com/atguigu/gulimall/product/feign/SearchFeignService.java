@@ -19,4 +19,5 @@ public interface SearchFeignService {
 
     @PostMapping("/search/save/product")
     R productStatusUp(@RequestBody List<SkuEsModel> skuEsModels);
+
 }

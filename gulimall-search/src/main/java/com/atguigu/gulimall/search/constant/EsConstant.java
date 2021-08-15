@@ -9,6 +9,7 @@ package com.atguigu.gulimall.search.constant;
 public class EsConstant {
 
     //sku数据在es中的索引
-    public final static String PRODUCT_INDEX = "product";
+    public final static String PRODUCT_INDEX = "gulimall_product";
+    public final static Integer PRODUCT_PAGESIZE = 16;
 
 }

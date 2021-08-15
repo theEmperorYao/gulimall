@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 
+import com.atguigu.gulimall.product.vo.SpuSaveVo;
 import com.atguigu.gulimall.product.vo.generated.SpuSaveVo2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -62,28 +63,24 @@ public class SpuInfoController {
         return R.ok().put("spuInfo", spuInfo);
     }
 
-//    /**
-//     * 保存
-//     */
-//    @RequestMapping("/save")
-//    //@RequiresPermissions("product:spuinfo:save")
-//    public R save(@RequestBody SpuSaveVo vo){
-////		spuInfoService.save(spuInfo);
-//        spuInfoService.saveSpuInfo(vo);
-//
-//        return R.ok();
-//    }
-
-
+    /**
+     * 保存
+     */
     @RequestMapping("/save")
-    public R save(@RequestBody SpuSaveVo2 vo){
-        spuInfoService.saveSpuInfo2(vo);
+    //@RequiresPermissions("product:spuinfo:save")
+    public R save(@RequestBody SpuSaveVo vo){
+        spuInfoService.saveSpuInfo(vo);
 
         return R.ok();
     }
 
 
-
+//    @RequestMapping("/save")
+//    public R save(@RequestBody SpuSaveVo2 vo){
+//        spuInfoService.saveSpuInfo2(vo);
+//
+//        return R.ok();
+//    }
 
     /**
      * 修改

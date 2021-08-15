@@ -1,6 +1,7 @@
 package com.atguigu.gulimall.product.app;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 
@@ -56,6 +57,18 @@ public class BrandController {
         return R.ok().put("brand", brand);
     }
 
+
+    /**
+     * 信息
+     */
+    @RequestMapping("/infos")
+    public R info(@RequestParam("brandIds") List<Long> brandIds) {
+        List<BrandEntity> brand = brandService.getBrandsByIds(brandIds);
+
+        return R.ok().put("brand", brand);
+    }
+
+
     /**
      * 保存
      */
@@ -88,7 +101,7 @@ public class BrandController {
 //        return R.ok();
 //    }
     @RequestMapping("/update")
-    public R Update(@RequestBody @Validated({UpdateGroup.class}) BrandEntity brandEntity){
+    public R Update(@RequestBody @Validated({UpdateGroup.class}) BrandEntity brandEntity) {
         brandService.updateInfo(brandEntity);
         return R.ok();
     }

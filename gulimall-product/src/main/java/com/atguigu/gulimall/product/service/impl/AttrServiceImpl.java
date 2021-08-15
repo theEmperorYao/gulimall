@@ -18,6 +18,7 @@ import com.google.common.base.Function;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -197,6 +198,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         return pageUtils;
     }
 
+    @Cacheable(value = "attr", key = "'attrinfo:'+#root.args[0]")
     @Override
     public AttrRespVO getAttrsInfo(Long attrId) {
         if (attrId == null || attrId < 1) {
@@ -272,9 +274,9 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
     @Override
     public List<Long> selectSearchAttrIds(List<Long> attrIds) {
         // SELECT attr_id FROM pms_attr WHERE id In (?) and search_type=1;
-//        List<Long> searchAttrIds = baseMapper.selectSearchAttrIds(attrIds);
-        QueryWrapper<AttrEntity> wrapper = new QueryWrapper<AttrEntity>().select("attr_id").in("attr_id", attrIds).eq("search_type", 1);
-        List<Long> searchAttrIds = baseMapper.selectList(wrapper).stream().map(AttrEntity::getAttrId).collect(toList());
+        List<Long> searchAttrIds = baseMapper.selectSearchAttrIds(attrIds);
+//        QueryWrapper<AttrEntity> wrapper = new QueryWrapper<AttrEntity>().select("attr_id").in("attr_id", attrIds).eq("search_type", 1);
+//        List<Long> searchAttrIds = baseMapper.selectList(wrapper).stream().map(AttrEntity::getAttrId).collect(toList());
         return searchAttrIds;
     }
 

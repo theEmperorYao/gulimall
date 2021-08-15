@@ -27,19 +27,11 @@ public class SkuFullReductionController {
     @Autowired
     private SkuFullReductionService skuFullReductionService;
 
-//    @PostMapping("/saveinfo")
-//    public R saveInfo(@RequestBody SkuReductionTo skuReductionTo) {
-//        skuFullReductionService.saveSkuReduction(skuReductionTo);
-//        return R.ok();
-//    }
-
-    @PostMapping("/saveinfo2")
-    public R saveSkuReductionInfo(@RequestBody SkuReductionTo skuReductionTo){
-        skuFullReductionService.saveSkuReductionInfo(skuReductionTo);
+    @PostMapping("/saveinfo")
+    public R saveInfo(@RequestBody SkuReductionTo skuReductionTo) {
+        skuFullReductionService.saveSkuReduction(skuReductionTo);
         return R.ok();
     }
-
-
 
 
 
