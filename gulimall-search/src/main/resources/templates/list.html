@@ -1237,14 +1237,13 @@
                                 <a href="/static/search/#">关注</a>
                             </div>
                             <p class="da">
-                                <a href="/static/search/#">
+                                <a th:href="|http://item.gulimall.com/${product.skuId}.html|">
                                     <img th:src="${product.skuImg}" class="dim">
                                 </a>
                             </p>
                             <ul class="tab_im">
-                                <li><a href="/static/search/#" title="黑色">
+                                <li><a href="/list.html" title="黑色">
                                     <img th:src="${product.skuImg}"></a></li>
-
                             </ul>
                             <p class="tab_R">
                                 <span th:text="'￥'+${product.skuPrice}">¥5199.00</span>

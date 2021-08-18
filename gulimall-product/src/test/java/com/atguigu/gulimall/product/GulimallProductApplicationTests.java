@@ -5,10 +5,14 @@ import com.aliyun.oss.OSSClient;
 import com.aliyun.oss.OSSClientBuilder;
 import com.atguigu.common.to.SpuBoundTo;
 import com.atguigu.common.utils.R;
+import com.atguigu.gulimall.product.dao.AttrGroupDao;
+import com.atguigu.gulimall.product.dao.SkuSaleAttrValueDao;
 import com.atguigu.gulimall.product.entity.BrandEntity;
 import com.atguigu.gulimall.product.feign.CouponFeignService;
 import com.atguigu.gulimall.product.service.BrandService;
 import com.atguigu.gulimall.product.service.CategoryService;
+import com.atguigu.gulimall.product.vo.ItemSaleAttrVo;
+import com.atguigu.gulimall.product.vo.SpuItemAttrGroup;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -23,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -44,29 +49,41 @@ class GulimallProductApplicationTests {
     StringRedisTemplate stringRedisTemplate;
 
 
-
     @Autowired
     private RedissonClient redissonClient;
 
+    @Autowired
+    private AttrGroupDao attrGroupDao;
+
+    @Autowired
+    private SkuSaleAttrValueDao skuSaleAttrValueDao;
 
     @Test
-    public void redisson(){
+    public void test() {
+//        List<SpuItemAttrGroup> attrGroupWithAttrsBySpuId = attrGroupDao.getAttrGroupWithAttrsBySpuId(14L, 225L);
+//        System.out.println("attrGroupWithAttrsBySpuId = " + attrGroupWithAttrsBySpuId);
+
+        List<ItemSaleAttrVo> saleAttrsBuSpuId = skuSaleAttrValueDao.getSaleAttrsBuSpuId(14L);
+        System.out.println("saleAttrsBuSpuId = " + saleAttrsBuSpuId);
+    }
+
+
+    @Test
+    public void redisson() {
         System.out.println(redissonClient);
     }
 
     @Test
-    public void testStringRedisTemplate(){
+    public void testStringRedisTemplate() {
         ValueOperations<String, String> ops = stringRedisTemplate.opsForValue();
 
         //保存
-        ops.set("hello","world_"+ UUID.randomUUID().toString());
+        ops.set("hello", "world_" + UUID.randomUUID().toString());
 
         //查询
         String hello = ops.get("hello");
         System.out.println("hello = " + hello);
     }
-
-
 
 
     @Test
