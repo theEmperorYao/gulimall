@@ -6,6 +6,7 @@ import com.atguigu.gulimall.member.exception.PhoneExistException;
 import com.atguigu.gulimall.member.exception.UserNameExistException;
 import com.atguigu.gulimall.member.vo.MemberRegisterVo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -54,9 +55,14 @@ public class MemberServiceImpl extends ServiceImpl<MemberDao, MemberEntity> impl
         memberEntity.setUsername(memberRegisterVo.getUserName());
 
         // 密码进行加密存储
-        memberEntity.setPassword(memberRegisterVo.getPassword());
 
+        BCryptPasswordEncoder bCryptPasswordEncoder=new BCryptPasswordEncoder();
+        String encode = bCryptPasswordEncoder.encode(memberRegisterVo.getPassword());
+        memberEntity.setPassword(encode);
 
+        //其他的默认信息
+
+        // 保存
         baseMapper.insert(memberEntity);
     }
 
