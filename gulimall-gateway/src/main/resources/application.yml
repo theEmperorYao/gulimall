@@ -14,7 +14,7 @@ spring:
           filters:
             - RewritePath=/api/(?<segment>/?.*), /$\{segment}
 
-#        http://localhost:88/api/thirdparty/oss/policy
+        #        http://localhost:88/api/thirdparty/oss/policy
         - id: third_party_route
           uri: lb://gulimall-third-party
           predicates:
@@ -52,6 +52,11 @@ spring:
           uri: lb://gulimall-search
           predicates:
             - Host=search.gulimall.com
+
+        - id: gulimall_auth_route
+          uri: lb://gulimall-auth-server
+          predicates:
+            - Host=auth.gulimall.com
 
 
 ## 前端项目，/api

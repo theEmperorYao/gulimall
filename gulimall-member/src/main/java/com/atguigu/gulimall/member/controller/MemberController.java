@@ -5,13 +5,10 @@ import java.util.Map;
 
 
 import com.atguigu.gulimall.member.feign.CouponFeignService;
+import com.atguigu.gulimall.member.vo.MemberRegisterVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.atguigu.gulimall.member.entity.MemberEntity;
 import com.atguigu.gulimall.member.service.MemberService;
@@ -37,6 +34,8 @@ public class MemberController {
     @Autowired
     private CouponFeignService couponFeignService;
 
+
+
     @RequestMapping("coupon/list")
     public R couponlist(){
 
@@ -47,7 +46,17 @@ public class MemberController {
     }
 
 
+    @PostMapping("/register")
+    public R register(@RequestBody MemberRegisterVo memberRegisterVo){
 
+        try{
+            memberService.register(memberRegisterVo);
+        }catch (Exception e){
+
+        }
+
+        return R.ok();
+    }
 
 
     /**
