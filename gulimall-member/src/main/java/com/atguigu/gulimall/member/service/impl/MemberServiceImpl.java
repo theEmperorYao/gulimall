@@ -77,7 +77,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberDao, MemberEntity> impl
     @Override
     public void checkUserName(String userName) throws UserNameExistException {
 
-        Integer count = baseMapper.selectCount(new QueryWrapper<MemberEntity>().eq("useName", userName));
+        Integer count = baseMapper.selectCount(new QueryWrapper<MemberEntity>().eq("username", userName));
         if (count > 0)
             throw new UserNameExistException();
     }

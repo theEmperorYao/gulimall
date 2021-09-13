@@ -1,8 +1,10 @@
 package com.atguigu.gulimall.auth.controller;
 
+import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.constant.AuthServerConstant;
 import com.atguigu.common.exception.BizCodeEnum;
 import com.atguigu.common.utils.R;
+import com.atguigu.gulimall.auth.feign.MemberFeignService;
 import com.atguigu.gulimall.auth.feign.ThirdPartyFeignService;
 import com.atguigu.gulimall.auth.vo.UserRegisterVo;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +45,9 @@ public class LoginController {
     @Autowired
     private ThirdPartyFeignService thirdPartyFeignService;
 
+    @Autowired
+    private MemberFeignService memberFeignService;
+
 //	@GetMapping({"/login.html","/","/index","/index.html"})
 //	public String loginPage(HttpSession session){
 //		Object attribute = session.getAttribute(AuthServerConstant.LOGIN_USER);
@@ -57,7 +62,7 @@ public class LoginController {
     @GetMapping("/sms/sendcode")
     public R sendCode(@RequestParam("phone") String phone) {
 
-        //todo1 几口防刷
+        //todo1 接口防刷
         String redisCode = stringRedisTemplate.opsForValue().get(AuthServerConstant.SMS_CODE_CACHE_PREFIX + phone);
 
         if (!Strings.isEmpty(redisCode)) {
@@ -134,6 +139,17 @@ public class LoginController {
             // 删除验证码 令牌机制
             stringRedisTemplate.delete(key);
             // 验证码通过        // 真正注册，调用远程服务进行注册
+            R r = memberFeignService.register(userRegisterVo);
+            if (r.getCode() == 0) {
+                // 登录页和注册页必须加域名，否则不能过nginx 不能访问到静态资源
+                return "redirect:http://auth.gulimall.com/login.html";
+            } else {
+                Map<String, String> errors = new HashMap<>();
+                errors.put("msg", r.getData(new TypeReference<String>() {
+                }));
+                redirectAttributes.addFlashAttribute("errors", errors);
+                return "redirect:http://auth.gulimall.com/reg.html";
+            }
 
         } else {
             Map<String, String> errors = new HashMap<>();
@@ -144,7 +160,7 @@ public class LoginController {
 
         // 注册成功回到首页，回到登录页
         // '/' 代表以项目域名路径为准 重定向方式数据重复提交
-        return "redirect:/login.html";
+//        return "redirect:/login.html";
     }
 
 
