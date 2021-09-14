@@ -3,6 +3,7 @@ package com.atguigu.gulimall.thirdparty.component;
 import com.atguigu.gulimall.thirdparty.util.HttpUtils;
 import lombok.Data;
 import org.apache.http.HttpResponse;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -40,7 +41,7 @@ public class SmsComponent {
             HttpResponse response = HttpUtils.doPost(this.host, path, method, headers, querys, bodys);
             System.out.println(response.toString());
             //获取response的body
-            //System.out.println(EntityUtils.toString(response.getEntity()));
+            System.out.println(EntityUtils.toString(response.getEntity()));
         } catch (Exception e) {
             e.printStackTrace();
         }

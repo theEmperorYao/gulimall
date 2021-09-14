@@ -6,6 +6,7 @@ import com.atguigu.common.exception.BizCodeEnum;
 import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.auth.feign.MemberFeignService;
 import com.atguigu.gulimall.auth.feign.ThirdPartyFeignService;
+import com.atguigu.gulimall.auth.vo.UserLoginVo;
 import com.atguigu.gulimall.auth.vo.UserRegisterVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -13,7 +14,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -145,7 +145,7 @@ public class LoginController {
                 return "redirect:http://auth.gulimall.com/login.html";
             } else {
                 Map<String, String> errors = new HashMap<>();
-                errors.put("msg", r.getData(new TypeReference<String>() {
+                errors.put("msg", r.getData("msg", new TypeReference<String>() {
                 }));
                 redirectAttributes.addFlashAttribute("errors", errors);
                 return "redirect:http://auth.gulimall.com/reg.html";
@@ -161,6 +161,32 @@ public class LoginController {
         // 注册成功回到首页，回到登录页
         // '/' 代表以项目域名路径为准 重定向方式数据重复提交
 //        return "redirect:/login.html";
+    }
+
+    /**
+     * @param userLoginVo
+     * @return java.lang.String
+     * @description 接受的是的是表单的k，v 所以不能用 @RequestBody
+     * @version V1.0.0
+     * @date 1:38 下午 2021/9/14
+     * @author tangyao
+     */
+    @PostMapping("/login")
+    public String login(UserLoginVo userLoginVo, RedirectAttributes redirectAttributes) {
+
+        // 远程登录
+        R r = memberFeignService.login(userLoginVo);
+        if (r.getCode() == 0) {
+            // 成功
+            return "redirect:http://gulimall.com";
+        } else {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("msg", r.getData("msg", new TypeReference<String>() {
+            }));
+            redirectAttributes.addFlashAttribute("errors", errors);
+            return "redirect:http://auth.gulimall.com/login.html";
+        }
+
     }
 
 

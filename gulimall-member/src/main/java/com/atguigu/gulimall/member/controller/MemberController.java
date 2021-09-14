@@ -8,9 +8,9 @@ import com.atguigu.common.exception.BizCodeEnum;
 import com.atguigu.gulimall.member.exception.PhoneExistException;
 import com.atguigu.gulimall.member.exception.UserNameExistException;
 import com.atguigu.gulimall.member.feign.CouponFeignService;
+import com.atguigu.gulimall.member.vo.MemberLoginVo;
 import com.atguigu.gulimall.member.vo.MemberRegisterVo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.web.bind.annotation.*;
 
 import com.atguigu.gulimall.member.entity.MemberEntity;
@@ -44,6 +44,19 @@ public class MemberController {
         memberEntity.setNickname("帅哥");
         R memberCoupon = couponFeignService.memberCoupon();
         return R.ok().put("member", memberEntity).put("memberCoupon", memberCoupon.get("memberCoupon"));
+    }
+
+    @PostMapping("login")
+    public R login(@RequestBody MemberLoginVo memberLoginVo) {
+        MemberEntity memberEntity = memberService.login(memberLoginVo);
+
+        if (memberEntity != null) {
+            return R.ok();
+        } else {
+            BizCodeEnum exception = BizCodeEnum.LOGINACCT_PASSWORD_INVAILD_EXCEPTION;
+            return R.error(exception.getCode(), exception.getMessage());
+        }
+
     }
 
 

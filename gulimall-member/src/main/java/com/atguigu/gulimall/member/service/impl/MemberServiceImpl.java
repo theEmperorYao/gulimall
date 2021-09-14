@@ -4,6 +4,7 @@ import com.atguigu.gulimall.member.dao.MemberLevelDao;
 import com.atguigu.gulimall.member.entity.MemberLevelEntity;
 import com.atguigu.gulimall.member.exception.PhoneExistException;
 import com.atguigu.gulimall.member.exception.UserNameExistException;
+import com.atguigu.gulimall.member.vo.MemberLoginVo;
 import com.atguigu.gulimall.member.vo.MemberRegisterVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -56,7 +57,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberDao, MemberEntity> impl
 
         // 密码进行加密存储
 
-        BCryptPasswordEncoder bCryptPasswordEncoder=new BCryptPasswordEncoder();
+        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
         String encode = bCryptPasswordEncoder.encode(memberRegisterVo.getPassword());
         memberEntity.setPassword(encode);
 
@@ -80,6 +81,32 @@ public class MemberServiceImpl extends ServiceImpl<MemberDao, MemberEntity> impl
         Integer count = baseMapper.selectCount(new QueryWrapper<MemberEntity>().eq("username", userName));
         if (count > 0)
             throw new UserNameExistException();
+    }
+
+    @Override
+    public MemberEntity login(MemberLoginVo memberLoginVo) {
+
+        String loginacct = memberLoginVo.getLoginacct();
+        String password = memberLoginVo.getPassword();
+
+        // 去数据库查询
+        MemberEntity memberEntity = baseMapper.selectOne(new QueryWrapper<MemberEntity>()
+                .eq("username", loginacct)
+                .or()
+                .eq("mobile", loginacct));
+
+        if (memberEntity != null) {
+            // 获取到数据库password
+            String passwordDb = memberEntity.getPassword();
+            BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+            boolean matches = bCryptPasswordEncoder.matches(password, passwordDb);
+            if (matches) {
+                return memberEntity;
+            }
+        }
+
+        // 登录失败 （没查到用户或者查到了密码匹配不上）
+        return null;
     }
 
 }
