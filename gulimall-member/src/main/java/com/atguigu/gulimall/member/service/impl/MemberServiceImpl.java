@@ -1,15 +1,23 @@
 package com.atguigu.gulimall.member.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.atguigu.common.utils.HttpUtils;
 import com.atguigu.gulimall.member.dao.MemberLevelDao;
 import com.atguigu.gulimall.member.entity.MemberLevelEntity;
 import com.atguigu.gulimall.member.exception.PhoneExistException;
 import com.atguigu.gulimall.member.exception.UserNameExistException;
 import com.atguigu.gulimall.member.vo.MemberLoginVo;
 import com.atguigu.gulimall.member.vo.MemberRegisterVo;
+import com.atguigu.gulimall.member.vo.SocialUser;
+import com.atguigu.gulimall.member.vo.SocialUserDetail;
+import org.apache.http.HttpResponse;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -109,4 +117,74 @@ public class MemberServiceImpl extends ServiceImpl<MemberDao, MemberEntity> impl
         return null;
     }
 
+    @Override
+    public MemberEntity login(SocialUser socialUser) throws Exception {
+
+        // 登录和注册合并逻辑
+        String id = socialUser.getId();
+        //1、判断当前社交用户是否已经登陆过系统
+        MemberEntity memberEntity = baseMapper.selectOne(new QueryWrapper<MemberEntity>().eq("social_gitee_uid", id));
+        if (memberEntity != null) {
+            // 用户已经注册过了
+            MemberEntity update = new MemberEntity();
+            update.setId(memberEntity.getId());
+            update.setExpiresGiteeIn(socialUser.getExpiresIn().toString());
+            update.setAcessGiteeToken(socialUser.getAccessToken());
+
+            baseMapper.updateById(update);
+
+            return memberEntity;
+        } else {
+            //2、没有查到当前社交用户对应的记录我们就注册一个(保存用户id和社交账户id之间关系)
+            MemberEntity register = new MemberEntity();
+            //3、查询当前社交用户账号信息（昵称，性别等）
+            try {
+                Map<String, String> queryMap = new HashMap<>();
+                HashMap<String, String> header = new HashMap<>();
+                queryMap.put("access_token", socialUser.getAccessToken());
+                HttpResponse response = HttpUtils.doGet("https://gitee.com/", "api/v5/user", "get", header, queryMap);
+                if (response.getStatusLine().getStatusCode() == 200) {
+                    String s = EntityUtils.toString(response.getEntity());
+                    SocialUserDetail socialUserDetail = JSON.parseObject(s, SocialUserDetail.class);
+//                JSONObject jsonObject = JSON.parseObject(s);
+//                jsonObject.getString("name");
+                    register.setNickname(socialUserDetail.getName());
+                }
+            } catch (Exception e) {
+
+            }
+
+            // 就算受网络影响远程查询失败，也要存这部分主要信息
+            register.setSocialGiteeUid(socialUser.getId());
+            register.setExpiresGiteeIn(socialUser.getExpiresIn().toString());
+            register.setAcessGiteeToken(socialUser.getAccessToken());
+            baseMapper.insert(register);
+
+            return register;
+
+        }
+
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

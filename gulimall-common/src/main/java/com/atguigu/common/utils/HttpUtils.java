@@ -1,4 +1,4 @@
-package com.atguigu.gulimall.auth.util;
+package com.atguigu.common.utils;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;

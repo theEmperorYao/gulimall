@@ -37,13 +37,13 @@ public class GulimallElasticSearchConfig {
 
         RestClientBuilder builder = null;
         //final String hostname, final int port, final String scheme
-        builder = RestClient.builder(new HttpHost("192.168.241.10", 9200, "http"));
+        builder = RestClient.builder(new HttpHost("192.168.241.13", 9200, "http"));
         RestHighLevelClient client = new RestHighLevelClient(builder);
 
 //        RestHighLevelClient client = new RestHighLevelClient(
 //                //如果es有多个，指定es的地址和端口号以及协议名
 //                RestClient.builder(
-//                        new HttpHost("192.168.241.10", 9200, "http")));
+//                        new HttpHost("192.168.241.13", 9200, "http")));
         return client;
     }
 }

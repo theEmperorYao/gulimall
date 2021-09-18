@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.member.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
@@ -92,5 +93,10 @@ public class MemberEntity implements Serializable {
 	 * 注册时间
 	 */
 	private Date createTime;
+
+
+	private String socialGiteeUid;
+	private String acessGiteeToken;
+	private String expiresGiteeIn;
 
 }
