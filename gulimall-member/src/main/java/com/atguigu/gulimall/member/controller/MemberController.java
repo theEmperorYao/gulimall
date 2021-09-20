@@ -74,7 +74,7 @@ public class MemberController {
 
         if (memberEntity != null) {
             //todo 1、登录后处理
-            return R.ok();
+            return R.ok().setData(memberEntity);
         } else {
             BizCodeEnum exception = BizCodeEnum.LOGINACCT_PASSWORD_INVAILD_EXCEPTION;
             return R.error(exception.getCode(), exception.getMessage());

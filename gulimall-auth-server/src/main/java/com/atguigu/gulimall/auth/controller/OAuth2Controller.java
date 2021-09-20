@@ -2,10 +2,11 @@ package com.atguigu.gulimall.auth.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.atguigu.common.constant.AuthServerConstant;
 import com.atguigu.common.utils.R;
+import com.atguigu.common.vo.MemberRespVo;
 import com.atguigu.gulimall.auth.feign.MemberFeignService;
 import com.atguigu.gulimall.auth.util.HttpUtils;
-import com.atguigu.gulimall.auth.vo.MemberRespVo;
 import com.atguigu.gulimall.auth.vo.SocialUser;
 import com.atguigu.gulimall.auth.vo.SocialUserDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +46,7 @@ public class OAuth2Controller {
      * @author tangyao
      */
     @GetMapping("/oauth2.0/gitee/success")
-    public String gitee(@RequestParam("code") String code, HttpSession session) throws Exception {
+    public String gitee(@RequestParam("code") String code, HttpSession session, HttpServletResponse servletResponse) throws Exception {
 
         Map<String, String> map = new HashMap<>();
         Map<String, String> header = new HashMap<>();
@@ -93,7 +95,17 @@ public class OAuth2Controller {
                     System.out.println("登录成功:用户信息：" + data);
                     log.info("登录成功:用户信息：{}", data.toString());
 
-                    session.setAttribute("loginUser",data);
+                    //1、第一次使用session，tomcat创建银行卡，命令浏览器保存银行卡号。就是JSESSIONID这个cookie
+                    //以后浏览器访问哪个网站就会带上这个网站的cookie。
+                    //子域之间；gulimall.com auth.gulimall.com order.gulimall.com
+                    //发卡的时候（指定为父域名），即使是子域系统，也能让父域直接使用
+                    //todo 1、默认发的令牌 session="xxxx" 作用域：当前域；（解决子域session共享问题）
+                    //todo 2、使用json的序列化方式来序列化对象数据到redis中
+                    session.setAttribute(AuthServerConstant.LOGIN_USER,data);
+//                    Cookie cookie = new Cookie("JESSIONID", "");
+//                    cookie.setDomain("");
+//                    servletResponse.addCookie(cookie);
+
                     //2、登录成功就跳回首页
                     return "redirect:http://gulimall.com";
                 }

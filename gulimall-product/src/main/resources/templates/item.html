@@ -58,7 +58,7 @@
             </ul>
             <ul class="header_ul_right">
                 <li style="border: 0;" th:if="${session.loginUser} !=null">
-                    <a class="aa" style="width: 100px">[[${session.loginUser.username}]]</a>
+                    <a class="aa" style="width: 100px">[[${session.loginUser.nickname}]]</a>
                     <!--              <a th:href="'http://member.gulimall.com/user/' + ${session.loginUser.id}+ '.html'">你好，[[${session.loginUser.username}]]</a>-->
                 </li>
                 <li th:if="${session.loginUser} !=null">
