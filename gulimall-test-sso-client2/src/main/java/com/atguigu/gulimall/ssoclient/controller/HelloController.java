@@ -50,7 +50,7 @@ public class HelloController {
      * @date 6:13 下午 2021/9/22
      * @author tangyao
      */
-    @GetMapping("/employees")
+    @GetMapping("/boss")
     public String employees(Model model,
                             @RequestParam(value = "token", required = false) String token,
                             HttpSession session) {
@@ -64,7 +64,6 @@ public class HelloController {
             String body = forEntity.getBody();
 
             session.setAttribute("loginUser", body);
-
         }
 
         Object loginUser = session.getAttribute("loginUser");
@@ -72,7 +71,7 @@ public class HelloController {
             //没登录,跳转到登录服务器进行登录
 
             //跳转过去，使用url上的查询参数标识我们自己是哪个页面redirect_url
-            return "redirect:" + ssoServerUrl + "?redirect_url=http://client1.com:8081/employees";
+            return "redirect:" + ssoServerUrl + "?redirect_url=http://client2.com:8082/boss";
         } else {
             List<String> emps = new ArrayList<>();
             emps.add("张三");
