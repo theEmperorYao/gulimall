@@ -2,11 +2,18 @@ package com.atguigu.gulimall.cart.controller;
 
 import com.atguigu.common.constant.AuthServerConstant;
 import com.atguigu.gulimall.cart.interceptor.CartInterceptor;
+import com.atguigu.gulimall.cart.service.CartService;
+import com.atguigu.gulimall.cart.vo.CartItem;
 import com.atguigu.gulimall.cart.vo.UserInfoTo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpSession;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @Classname CartController
@@ -16,6 +23,10 @@ import javax.servlet.http.HttpSession;
  */
 @Controller
 public class CartController {
+
+
+    @Autowired
+    private CartService cartService;
 
     /**
      * @return java.lang.String
@@ -43,13 +54,61 @@ public class CartController {
     /**
      * @return java.lang.String
      * @description
+     *
+     *
+     * redirectAttributes.addFlashAttribute()
+     * 将数据放在session里面可以在页面取出，但是只能取一次
+     * redirectAttributes.addAttribute("skuId", skuId);
+     * 将数据放在url后面
+     *
      * @version V1.0.0
      * @date 10:40 下午 2021/9/26
      * @author tangyao
      */
     @GetMapping("/addToCart")
-    public String addToCart() {
+    public String addToCart(@RequestParam("skuId") Long skuId,
+                            @RequestParam("num") Integer num,
+                            RedirectAttributes redirectAttributes) throws ExecutionException, InterruptedException {
+
+        cartService.addToCart(skuId, num);
+        redirectAttributes.addAttribute("skuId", skuId);
+        return "redirect:http://cart.gulimall.com/addToCartSuccess.html";
+    }
+
+
+    /**
+     * @description 跳转到成功页
+     * @param skuId 
+     * @param model
+     * @return java.lang.String
+     * @version V1.0.0
+     * @date 12:25 上午 2021/9/28
+     * @author tangyao
+     */
+    @GetMapping("addToCartSuccess.html")
+    public String addToCartSuccessPage(@RequestParam("skuId") Long skuId,
+                                        Model model) {
+        // 重定向到成功页面。再次查询购物车数据即可
+        CartItem cartItem = cartService.getCartItem(skuId);;
+        model.addAttribute("item",cartItem);
+
+
         return "success";
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
