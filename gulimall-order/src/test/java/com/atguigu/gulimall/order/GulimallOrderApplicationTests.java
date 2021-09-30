@@ -1,7 +1,7 @@
 package com.atguigu.gulimall.order;
 
+import com.atguigu.gulimall.order.entity.OrderEntity;
 import com.atguigu.gulimall.order.entity.OrderReturnReasonEntity;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.*;
@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @SpringBootTest
@@ -24,15 +25,26 @@ class GulimallOrderApplicationTests {
     @Test
     public void sendMessageTest() {
         // 1、发送消息 如果发送的消息是个对象，我们会使用序列化机制，将对象写出去，对象必须实现Serializable
-        OrderReturnReasonEntity reasonEntity = new OrderReturnReasonEntity();
-        reasonEntity.setId(1L);
-        reasonEntity.setName("哈哈");
-        reasonEntity.setCreateTime(new Date());
 
         String msg = "Hello World !";
         //2、发送的对象类型，可以使一个json
-        rabbitTemplate.convertAndSend("hello-java-exchange", "hello.java", reasonEntity);
-        log.info("消息发送完成{}", reasonEntity);
+        for (int i = 0; i < 10; i++) {
+            if (i % 2 == 0) {
+                OrderReturnReasonEntity reasonEntity = new OrderReturnReasonEntity();
+                reasonEntity.setId(1L);
+                reasonEntity.setName("哈哈-" + i);
+                reasonEntity.setCreateTime(new Date());
+
+                rabbitTemplate.convertAndSend("hello-java-exchange", "hello.java", reasonEntity);
+            } else {
+                OrderEntity orderEntity = new OrderEntity();
+                orderEntity.setOrderSn(UUID.randomUUID().toString());
+                rabbitTemplate.convertAndSend("hello-java-exchange", "hello.java", orderEntity);
+            }
+            log.info("消息发送完成{}");
+
+        }
+
     }
 
 
@@ -56,7 +68,7 @@ class GulimallOrderApplicationTests {
 
     @Test
     public void createQueue() {
-        Queue queue = new Queue("hello-java-queue", true, false, true);
+        Queue queue = new Queue("hello-java-queue", true, false, false);
         amqpAdmin.declareQueue(queue);
         log.info("Queue[{}]创建成功", "hello-java-queue");
     }

@@ -1,6 +1,7 @@
 package com.atguigu.gulimall.order;
 
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -13,9 +14,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *  public class RabbitProperties
  *  3、给配置文件中配置spring.rabbitmq信息
  * 4、@EnableRabbit：Enablexxx
- *
+ * 5、监听消息 使用@RabbitListener
+ *  @RabbitListener：类+方法上（监听那些队列即可）
+ *  @RabbitHandler：标在方法上(重载区分不同的消息)
  */
-
 @EnableRabbit
 @SpringBootApplication
 public class GulimallOrderApplication {
