@@ -196,7 +196,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public void  changeItemCount(Long skuId, Integer num) {
+    public void changeItemCount(Long skuId, Integer num) {
         CartItem cartItem = getCartItem(skuId);
         cartItem.setCount(num);
         String s = JSON.toJSONString(cartItem);
@@ -208,5 +208,23 @@ public class CartServiceImpl implements CartService {
     public void deleteItem(Long skuId) {
         BoundHashOperations<String, Object, Object> cartOps = getCartOps();
         cartOps.delete(skuId.toString());
+    }
+
+    @Override
+    public List<CartItem> getUserCartItems() {
+        UserInfoTo userInfoTo = CartInterceptor.threadLocal.get();
+        if (userInfoTo.getUserId() == null) {
+            return null;
+        }
+        String cartKey = CART_PREFIX + userInfoTo.getUserId();
+        List<CartItem> collect = getCartItems(cartKey).stream()
+                .filter(item -> item.getCheck())
+                .map(item -> {
+                    // 更新为最新价格
+                    item.setPrice(productFeignService.getPrice(item.getSkuId()));
+                    return item;
+                }).collect(Collectors.toList());
+        return collect;
+
     }
 }

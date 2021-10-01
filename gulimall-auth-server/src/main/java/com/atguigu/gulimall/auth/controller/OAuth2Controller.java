@@ -100,7 +100,7 @@ public class OAuth2Controller {
                     //子域之间；gulimall.com auth.gulimall.com order.gulimall.com
                     //发卡的时候（指定为父域名），即使是子域系统，也能让父域直接使用
                     //todo 1、默认发的令牌 session="xxxx" 作用域：当前域；（解决子域session共享问题）
-                    //todo 2、使用json的序列化方式来序列化对象数据到redis中
+                    //todo 2、使用json的序列化方式来序列化对象数据到red is中
                     session.setAttribute(AuthServerConstant.LOGIN_USER,data);
 //                    Cookie cookie = new Cookie("JESSIONID", "");
 //                    cookie.setDomain("");

@@ -4,6 +4,7 @@ import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 
 /**
@@ -20,6 +21,7 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
  *  @RabbitHandler：标在方法上(重载区分不同的消息)
  */
 @EnableRedisHttpSession
+@EnableFeignClients
 @EnableRabbit
 @SpringBootApplication
 public class GulimallOrderApplication {
