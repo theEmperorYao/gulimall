@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -22,6 +25,8 @@ import com.atguigu.common.utils.Query;
 import com.atguigu.gulimall.order.dao.OrderDao;
 import com.atguigu.gulimall.order.entity.OrderEntity;
 import com.atguigu.gulimall.order.service.OrderService;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 
 @Service("orderService")
@@ -34,6 +39,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     @Autowired
     CartFeignService cartFeignService;
 
+    @Autowired
+    ThreadPoolExecutor executor;
+
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         IPage<OrderEntity> page = this.page(
@@ -45,22 +53,33 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     }
 
     @Override
-    public OrderConfirmVo confirmOrder() {
+    public OrderConfirmVo confirmOrder() throws ExecutionException, InterruptedException {
         OrderConfirmVo confirmVo = new OrderConfirmVo();
 
         MemberRespVo memberRespVo = LoginUserInterceptor.loginUser.get();
+        //获取之前的请求
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
 
-        // 1、远程查询所有的收货地址列表
-        List<MemberAddressVo> address = memberFeignService.getAddress(memberRespVo.getId());
-        confirmVo.setAddress(address);
+        System.out.println("主线程。。。"+Thread.currentThread().getId());
+        CompletableFuture<Void> getAddressFuture = CompletableFuture.runAsync(() -> {
+            // 1、远程查询所有的收货地址列表
+            System.out.println("member线程。。。"+Thread.currentThread().getId());
+            // 每一个线程都要共享之前的请求数据
+            RequestContextHolder.setRequestAttributes(attributes);
+            List<MemberAddressVo> address = memberFeignService.getAddress(memberRespVo.getId());
+            confirmVo.setAddress(address);
+        }, executor);
 
-        // 2、远程查询购物车所有选中的购物项
-
-        List<OrderItemVo> items = cartFeignService.currentUserCartItems();
-        confirmVo.setItems(items);
-
-        //feign 在远程调用之前要构造请求，调用很多拦截器
-        // (RequestInterceptor interceptor : requestInterceptors)
+        CompletableFuture<Void> cartFuture = CompletableFuture.runAsync(() -> {
+            // 2、远程查询购物车所有选中的购物项
+            System.out.println("cart线程。。。"+Thread.currentThread().getId());
+            // 每一个线程都要共享之前的请求数据
+            RequestContextHolder.setRequestAttributes(attributes);
+            List<OrderItemVo> items = cartFeignService.currentUserCartItems();
+            confirmVo.setItems(items);
+            //feign 在远程调用之前要构造请求，调用很多拦截器
+            // (RequestInterceptor interceptor : requestInterceptors)
+        }, executor);
 
 
         // 3、查询用户积分
@@ -69,7 +88,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
         // 4、其他数据自动计算
 
-        // 5、防重令牌
+        // todo 5、防重令牌
+        CompletableFuture.allOf(getAddressFuture, cartFuture).get();
 
         return confirmVo;
     }
