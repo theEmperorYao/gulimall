@@ -81,7 +81,7 @@ public class OrderItemServiceImpl extends ServiceImpl<OrderItemDao, OrderItemEnt
             }else {
                 //退货 requeue=false 丢弃  requeue=true 发回服务器，服务器重新入队
                 //basicNack(long deliveryTag, boolean multiple, boolean requeue)
-                channel.basicNack(deliveryTag,false,false );
+                channel.basicNack(deliveryTag,false,true);
                 //basicReject(long deliveryTag, boolean requeue)
 //                channel.basicReject();
 

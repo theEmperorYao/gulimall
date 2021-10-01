@@ -4,6 +4,7 @@ import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 
 /**
  *1、引入amqp场景 RabbitAutoConfiguration就会自动生效
@@ -18,6 +19,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *  @RabbitListener：类+方法上（监听那些队列即可）
  *  @RabbitHandler：标在方法上(重载区分不同的消息)
  */
+@EnableRedisHttpSession
 @EnableRabbit
 @SpringBootApplication
 public class GulimallOrderApplication {
