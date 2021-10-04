@@ -24,10 +24,13 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -142,6 +145,36 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         return confirmVo;
     }
 
+    // 同一个方法内事务方法互相调用默认失效（原因是绕过了代理对象）
+    // 事务使用代理对象来控制的
+    @Transactional(timeout = 30)//a事务的所有设置就传播到了和他公用的一个事务的方法
+    public void a() {
+        //b,c 做任何设置都没有，都是和a公用一个事务
+
+        OrderServiceImpl orderService = (OrderServiceImpl) AopContext.currentProxy();
+        orderService.b();
+        orderService.c();
+//        this.b();
+//        this.c();
+//        bService.b();//a事务
+//        cService.c();//新事务(不回滚)
+        int i = 10 / 0;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED,timeout = 2)
+    public void b() {
+
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW,timeout = 20)
+    public void c() {
+
+    }
+
+    // 本地事务，在分布式系统，只能控制住自己的回滚，控制不了其他服务的回滚
+    // 分布式事务：最大原因，网络问题+分布式机器。
+    //(isolation = Isolation.REPEATABLE_READ )
+
     @Transactional
     @Override
     public SubmitOrderResponseVo submitOrder(OrderSubmitVo orderSubmitVo) {
@@ -194,11 +227,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 }).collect(Collectors.toList());
                 lockVo.setLocks(locks);
                 // todo 4、远程锁库存
+                //库存成功了，但是网络原因超时了，订单回滚，库存不滚
                 R r = wmsFeignService.orderLockStock(lockVo);
                 if (r.getCode() == 0) {
                     // 锁成功
                     response.setOrder(order.getOrder());
-                    // todo 5、远程扣减积分
+                    // todo 5、远程扣减积分 出异常
+//                    int i = 10 / 0;// 订单回滚，库存不滚
                     return response;
                 } else {
                     // 锁定失败
