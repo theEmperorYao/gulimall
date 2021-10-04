@@ -729,8 +729,8 @@
               $("#payPriceInput").val(total);
               // console.log(data)
               // layer.msg("总金额：" + total + "元")
-              $("#recieveAddressEle").text(data.data.memberAddressVo.province + "  " + data.data.memberAddressVo.city + " " + data.data.memberAddressVo.detailAddress);
-              $("#recieveEle").text(data.data.memberAddressVo.name)
+              $("#recieveAddressEle").text(data.data.address.province + "  " + data.data.address.city + " " + data.data.address.detailAddress);
+              $("#recieveEle").text(data.data.address.name)
           })
       }
 		</script>

@@ -432,17 +432,26 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         // 远程调用上架商品
         //todo 5、将数据发送给es保存
         R r = searchFeignService.productStatusUp(upProducts);
-        if (r.getCode()==0){
+        if (r.getCode() == 0) {
             //远程调用成功
             //todo 更改spuinfo中商品的发布状态为已上架
             //状态应该作为枚举类存在的
             baseMapper.updateSpuStatus(spuId, ProductConstant.StatusEnum.SPU_UP.getCode());
-        }else {
+        } else {
             //远程调用失败
             //todo 7、重复调用？接口幂等性；重试机制？xxx
         }
 
 
+    }
+
+    @Override
+    public SpuInfoEntity getSpuInfoBySkuId(Long skuId) {
+
+        SkuInfoEntity byId = skuInfoService.getById(skuId);
+        Long spuId = byId.getSpuId();
+        SpuInfoEntity spuInfoEntity = getById(spuId);
+        return spuInfoEntity;
     }
 
     private void saveBaseSpuInfo(SpuInfoEntity spuInfoEntity) {

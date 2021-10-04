@@ -29,7 +29,7 @@ public class CartController {
 
     @ResponseBody
     @GetMapping("/currentUserCartItems")
-    public List<CartItem> currentUserCartItems(){
+    public List<CartItem> getCurrentUserCartItems(){
 
         return cartService.getUserCartItems();
     }

@@ -16,5 +16,5 @@ import java.util.List;
 public interface CartFeignService {
 
     @GetMapping("/currentUserCartItems")
-    List<OrderItemVo> currentUserCartItems();
+    List<OrderItemVo> getCurrentUserCartItems();
 }

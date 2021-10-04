@@ -26,21 +26,20 @@ public class GuliFeignConfig {
             public void apply(RequestTemplate template) {
                 //1、RequestContextHolder拿来刚进来的这个请求
                 ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+                if (attributes != null) {
+                    System.out.println("拦截器RequestInterceptor线程。。。" + Thread.currentThread().getId());
+                    // 老请求
+                    HttpServletRequest request = attributes.getRequest();
 
-                System.out.println("拦截器RequestInterceptor线程。。。" + Thread.currentThread().getId());
-                // 老请求
-                HttpServletRequest request = attributes.getRequest();
+                    if (request != null) {
+                        // 同步请求头数据，Cookie
+                        String cookie = request.getHeader("Cookie");
+                        // 给新请求同步了老请求的cookie
+                        template.header("Cookie", cookie);
 
-                if (request != null) {
-                    // 同步请求头数据，Cookie
-                    String cookie = request.getHeader("Cookie");
-                    // 给新请求同步了老请求的cookie
-                    template.header("Cookie", cookie);
-
-                    System.out.println("fegin远程之前先进行RequestInterceptor.apply");
+                        System.out.println("fegin远程之前先进行RequestInterceptor.apply");
+                    }
                 }
-
-
             }
         };
     }

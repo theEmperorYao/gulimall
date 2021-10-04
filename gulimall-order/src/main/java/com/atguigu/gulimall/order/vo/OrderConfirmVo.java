@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Classname OrderConfrimVo
@@ -25,6 +26,7 @@ public class OrderConfirmVo {
     // 优惠券信息
     Integer integration;
 
+    Map<Long,Boolean> stocks;
     // 订单总额
 //    BigDecimal total;
 
@@ -33,6 +35,17 @@ public class OrderConfirmVo {
 
     // 防重令牌
     String orderToken;
+
+    public Integer getCount() {
+        Integer sum = 0;
+        if (items != null) {
+            for (OrderItemVo item : items) {
+                sum += item.getCount();
+            }
+        }
+        return sum;
+    }
+
 
     public BigDecimal getTotal() {
 

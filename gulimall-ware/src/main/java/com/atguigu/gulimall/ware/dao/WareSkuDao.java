@@ -30,4 +30,7 @@ public interface WareSkuDao extends BaseMapper<WareSkuEntity> {
     @Select("SELECT sku_id, SUM(stock - stock_locked) FROM wms_ware_sku GROUP BY sku_id")
     Map<Long, Long> getSkuStock2();
 
+    List<Long> listWareIdHasSkuStock(@Param("skuId") Long skuId);
+
+    Long lockSkuStock(@Param("skuId") Long skuId, @Param("wareId") Long wareId, @Param("num") Integer num);
 }

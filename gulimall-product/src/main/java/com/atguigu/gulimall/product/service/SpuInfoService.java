@@ -31,5 +31,16 @@ public interface SpuInfoService extends IService<SpuInfoEntity> {
      */
     void up(Long spuId);
 
+    /**
+     * @description
+     * @param skuId 
+     * @return com.atguigu.gulimall.product.entity.SpuInfoEntity
+     * @version V1.0.0
+     * @date 10:40 下午 2021/10/3
+     * @author tangyao
+     */
+    SpuInfoEntity getSpuInfoBySkuId(Long skuId);
 }
+
+
 
