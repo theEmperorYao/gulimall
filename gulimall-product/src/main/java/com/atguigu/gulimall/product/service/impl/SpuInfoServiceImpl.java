@@ -14,6 +14,7 @@ import com.atguigu.gulimall.product.service.*;
 import com.atguigu.gulimall.product.vo.*;
 import com.atguigu.gulimall.product.vo.generated.SpuSaveVo2;
 import com.atguigu.gulimall.product.vo.ware.SpuHasStockVo;
+import io.seata.spring.annotation.GlobalTransactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -81,6 +82,17 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
         return new PageUtils(page);
     }
+
+    /**
+     * @description
+     * todo 高级部分完善
+     *     @GlobalTransactional
+     *     Seata AT 分布式事务
+     * @return void
+     * @version V1.0.0
+     * @date 4:21 下午 2021/10/6
+     * @author tangyao
+     */
 
     @Transactional(rollbackFor = Exception.class)
     @Override

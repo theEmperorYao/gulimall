@@ -175,7 +175,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     // 分布式事务：最大原因，网络问题+分布式机器。
     //(isolation = Isolation.REPEATABLE_READ )
 
-    @GlobalTransactional
+//    @GlobalTransactional// 高并发不适合
     @Transactional
     @Override
     public SubmitOrderResponseVo submitOrder(OrderSubmitVo orderSubmitVo) {
@@ -229,6 +229,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 lockVo.setLocks(locks);
                 // todo 4、远程锁库存
                 //库存成功了，但是网络原因超时了，订单回滚，库存不滚
+                // 为了保证高并发。库存服务自己回滚。可以发消息给库存服务
+                // 库存服务本身也可以使用自动解锁模式 消息队列
                 R r = wmsFeignService.orderLockStock(lockVo);
                 if (r.getCode() == 0) {
                     // 锁成功
