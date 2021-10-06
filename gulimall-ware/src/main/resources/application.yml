@@ -30,3 +30,10 @@ server:
 logging:
   level:
     com.atguigu: debug
+
+
+seata:
+  tx-service-group: gulimall-order-group
+  service:
+    disable-global-transaction: false
+

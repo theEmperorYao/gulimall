@@ -13,3 +13,7 @@ mybatis-plus:
 
 server:
   port: 9010
+seata:
+  tx-service-group: gulimall-order-group
+  service:
+    disable-global-transaction: false
