@@ -25,6 +25,10 @@
           and ware_id = #{wareId}
           and stock - stock_locked >= #{num}
     </update>
+    <update id="unlockStock">
+        update wms_ware_sku SET stock_locked = stock_locked - #{num}
+        WHERE sku_id = #{skuId} and ware_id = #{wareId}
+    </update>
     <select id="getSkuHasStock" resultType="com.atguigu.gulimall.ware.vo.SpuHasStockVo">
         SELECT sku_id,SUM(stock-stock_locked) from `wms_ware_sku` WHERE sku_id in
         <foreach collection="ids" item="id" separator="," open="(" close=")">

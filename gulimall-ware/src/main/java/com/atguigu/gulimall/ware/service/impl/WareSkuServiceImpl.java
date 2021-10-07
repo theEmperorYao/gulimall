@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.ware.service.impl;
 
+import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.exception.NoStockException;
 import com.atguigu.common.to.mq.StockDetailTo;
 import com.atguigu.common.to.mq.StockLockTo;
@@ -7,12 +8,15 @@ import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.ware.config.MyRabbitConfig;
 import com.atguigu.gulimall.ware.entity.WareOrderTaskDetailEntity;
 import com.atguigu.gulimall.ware.entity.WareOrderTaskEntity;
+import com.atguigu.gulimall.ware.feign.OrderFeignService;
 import com.atguigu.gulimall.ware.feign.PurchurseFeignService;
 import com.atguigu.gulimall.ware.service.WareOrderTaskDetailService;
 import com.atguigu.gulimall.ware.service.WareOrderTaskService;
 import com.atguigu.gulimall.ware.vo.OrderItemVo;
+import com.atguigu.gulimall.ware.vo.OrderVo;
 import com.atguigu.gulimall.ware.vo.SpuHasStockVo;
 import com.atguigu.gulimall.ware.vo.WareSkuLockVo;
+import com.rabbitmq.client.Channel;
 import lombok.Data;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.amqp.core.Message;
@@ -23,6 +27,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,7 +43,7 @@ import com.atguigu.gulimall.ware.entity.WareSkuEntity;
 import com.atguigu.gulimall.ware.service.WareSkuService;
 import org.springframework.transaction.annotation.Transactional;
 
-@RabbitListener(queues = "stock.release.stock.queue")
+
 @Service("wareSkuService")
 public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> implements WareSkuService {
 
@@ -60,36 +65,8 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
     @Autowired
     MyRabbitConfig myRabbitConfig;
 
-
-    /**
-     * 1、 库存自动解锁
-     * 下订单成功，库存锁定成功，接下来的业务调用失败，导致订单回滚。之前锁定的库存就要自动解锁。
-     * 2、订单失败
-     * 锁库存失败
-     *
-     * @param to
-     * @param message
-     */
-    @RabbitHandler
-    public void handleStockLockRelease(StockLockTo to, Message message) {
-        System.out.println("收到解锁库存的消息");
-        // 库存工作单id
-        Long id = to.getId();
-        StockDetailTo detail = to.getDetail();
-        Long skuId = detail.getSkuId();
-        Long detailId = detail.getId();
-        // 解锁
-        //1、查询数据库关于这个订单的锁库存消息。
-        // 有：
-        // 没有：库存锁定失败，库存回滚了。这种情况无需解锁
-        WareOrderTaskDetailEntity byId = wareOrderTaskDetailService.getById(detailId);
-        if (byId != null) {
-            //解锁
-        } else {
-            // 无需解锁
-        }
-
-    }
+    @Autowired
+    OrderFeignService orderFeignService;
 
 
     @Override
@@ -261,6 +238,76 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
 
         //3、肯定全部都是锁定成功的
         return true;
+    }
+
+    /**
+     * 1、 库存自动解锁
+     * 下订单成功，库存锁定成功，接下来的业务调用失败，导致订单回滚。之前锁定的库存就要自动解锁。
+     * 2、订单失败
+     * 锁库存失败
+     * <p>
+     * 只要解锁库存的消息失败。一定要告诉服务器解锁失败
+     *
+     * @param to
+     */
+    @Override
+    public void unlockStock(StockLockTo to) {
+
+
+        StockDetailTo detail = to.getDetail();
+        Long detailId = detail.getId();
+        // 解锁
+        //1、查询数据库关于这个订单的锁库存消息。
+        // 有：证明库存锁定成功
+        //    解锁：订单情况
+        //    1、没有这个订单。必须解锁
+        //    2、有这个订单，不是解锁库存。
+        //        订单状态: 已取消：解锁库存
+        //                 没取消：不能解锁
+        // 没有：库存锁定失败，库存回滚了。这种情况无需解锁
+        WareOrderTaskDetailEntity byId = wareOrderTaskDetailService.getById(detailId);
+        if (byId != null) {
+            //解锁
+            // 库存工作单id
+            Long id = to.getId();
+            WareOrderTaskEntity taskEntity = wareOrderTaskService.getById(id);
+            String orderSn = taskEntity.getOrderSn();
+            // 根据订单号查询订单状态
+            R r = orderFeignService.getOrderStatus(orderSn);
+            if (r.getCode() == 0) {
+                //订单数据返回成功
+                OrderVo data = r.getData(new TypeReference<OrderVo>() {
+                });
+
+                if (data == null || data.getStatus() == 4) {
+                    // 订单不存在
+                    //订单已经被取消了。才能解锁库存
+                    if (taskEntity.getTaskStatus() == 1) {
+                        // 当前库存工作单详情，状态1，已锁定，但是未解锁才可以解锁
+                        unLockStock(detail.getSkuId(), detail.getWareId(), detail.getSkuNum(), detailId);
+                    }
+                }
+
+            } else {
+                // 订单查询失败，不能消费队列
+                // 消息拒绝以后重新放到队列里面，让别人继续消费解锁
+                throw new RuntimeException("远程服务失败");
+            }
+
+        } else {
+
+        }
+
+    }
+
+    private void unLockStock(Long skuId, Long wareId, Integer num, Long taskDetailId) {
+        // 库存解锁
+        wareSkuDao.unlockStock(skuId, wareId, num);
+        // 更新库存工作单的状态
+        WareOrderTaskDetailEntity entity = new WareOrderTaskDetailEntity();
+        entity.setId(taskDetailId);
+        entity.setLockStatus(2);//变为已解锁
+        wareOrderTaskDetailService.updateById(entity);
     }
 
     @Data

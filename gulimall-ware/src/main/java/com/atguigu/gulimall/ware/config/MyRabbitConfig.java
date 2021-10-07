@@ -52,10 +52,12 @@ public class MyRabbitConfig {
         return new Jackson2JsonMessageConverter();
     }
 
-    @RabbitListener(queues = "stock.release.stock.queue")
-    public void handle(Message message) {
-
-    }
+    // 多个消费者监听一个队列就会给他派发，但是这方法解决不了，
+    // 因为没有手动确认，注释掉重启服务会派发给其他监听方法
+//    @RabbitListener(queues = "stock.release.stock.queue")
+//    public void handle(Message message) {
+//
+//    }
 
 
     @Bean
