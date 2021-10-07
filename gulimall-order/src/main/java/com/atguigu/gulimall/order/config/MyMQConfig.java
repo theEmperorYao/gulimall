@@ -5,6 +5,7 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.Nullable;
@@ -22,10 +23,12 @@ import java.util.Map;
 @Configuration
 public class MyMQConfig {
 
+
     @RabbitListener(queues = "order.release.order.queue")
     public void listener(OrderEntity entity, Channel channel, Message message) throws IOException {
         System.out.println("收到过期的清单信息：准备关闭信息" + entity.getOrderSn());
         channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+
     }
 
 
@@ -36,7 +39,7 @@ public class MyMQConfig {
      */
     @Bean
     // 死信队列
-    public Queue orderDelayQueue() {
+    public Queue orderDelayQueue(MyRabbitConfigProperties rabbitConfigProperties) {
         // (String name, boolean durable, boolean exclusive, boolean autoDelete,
         //			@Nullable Map<String, Object> arguments)
 
@@ -46,54 +49,54 @@ public class MyMQConfig {
          * x-message-ttl: 60000
          */
         Map<String, Object> arguments = new HashMap<>();
-        arguments.put("x-dead-letter-exchange", "order-event-exchange");
-        arguments.put("x-dead-letter-routing-key", "order.release.order");
-        arguments.put("x-message-ttl", 60000);
-        Queue queue = new Queue("order.delay.queue", true, false, false, arguments);
+        arguments.put("x-dead-letter-exchange", rabbitConfigProperties.getEventExchange());
+        arguments.put("x-dead-letter-routing-key", rabbitConfigProperties.getLetterRoutingKey());
+        arguments.put("x-message-ttl", rabbitConfigProperties.getTtl());
+        Queue queue = new Queue(rabbitConfigProperties.getDelayQueue(), true, false, false, arguments);
 
         return queue;
     }
 
     @Bean
-    public Queue orderReleaseOrderQueue() {
-        Queue queue = new Queue("order.release.order.queue", true, false, false);
+    public Queue orderReleaseOrderQueue(MyRabbitConfigProperties rabbitConfigProperties) {
+        Queue queue = new Queue(rabbitConfigProperties.getNormalQueue(), true, false, false);
 
         return queue;
     }
 
     @Bean
-    public Exchange orderEventExchange() {
+    public Exchange orderEventExchange(MyRabbitConfigProperties rabbitConfigProperties) {
         // String name, boolean durable, boolean autoDelete, Map<String, Object> arguments
 
-        TopicExchange topicExchange = new TopicExchange("order-event-exchange", true, false);
+        TopicExchange topicExchange = new TopicExchange(rabbitConfigProperties.getEventExchange(), true, false);
         return topicExchange;
     }
 
     @Bean
-    public Binding orderCreateOrderBinding() {
+    public Binding orderCreateOrderBinding(MyRabbitConfigProperties rabbitConfigProperties) {
 
 //        (String destination, Binding.DestinationType destinationType, String exchange, String routingKey,
 //                @Nullable Map<String, Object> arguments)
 
         HashMap<String, Object> arguments = new HashMap<>();
         Binding binding = new Binding(
-                "order.delay.queue",
+                rabbitConfigProperties.getDelayQueue(),
                 Binding.DestinationType.QUEUE,
-                "order-event-exchange",
-                "order.create.order",
+                rabbitConfigProperties.getEventExchange(),
+                rabbitConfigProperties.getRoutingKey(),
                 null);
 
         return binding;
     }
 
     @Bean
-    public Binding orderReleaseOrderBinding() {
+    public Binding orderReleaseOrderBinding(MyRabbitConfigProperties rabbitConfigProperties) {
         HashMap<String, Object> arguments = new HashMap<>();
         Binding binding = new Binding(
-                "order.release.order.queue",
+                rabbitConfigProperties.getNormalQueue(),
                 Binding.DestinationType.QUEUE,
-                "order-event-exchange",
-                "order.release.order",
+                rabbitConfigProperties.getEventExchange(),
+                rabbitConfigProperties.getLetterRoutingKey(),
                 null);
         return binding;
     }

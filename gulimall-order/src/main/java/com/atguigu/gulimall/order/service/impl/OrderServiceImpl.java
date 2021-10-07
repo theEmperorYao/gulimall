@@ -236,7 +236,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                     // 锁成功
                     response.setOrder(order.getOrder());
                     // todo 5、远程扣减积分 出异常
-//                    int i = 10 / 0;// 订单回滚，库存不滚
+                    int i = 10 / 0;// 订单回滚，库存不滚
                     return response;
                 } else {
                     // 锁定失败

@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.order;
 
+import io.seata.spring.annotation.GlobalTransactional;
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.boot.SpringApplication;
@@ -51,7 +52,7 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
 @EnableRedisHttpSession
 @EnableFeignClients
 @EnableRabbit
-@SpringBootApplication
+@SpringBootApplication()
 public class GulimallOrderApplication {
 
     public static void main(String[] args) {

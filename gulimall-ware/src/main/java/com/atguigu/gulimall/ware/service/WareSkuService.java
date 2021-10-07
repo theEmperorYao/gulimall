@@ -33,5 +33,7 @@ public interface WareSkuService extends IService<WareSkuEntity> {
      * @author tangyao
      */
     Boolean orderLockStock(WareSkuLockVo wareSkuLockVo);
+
+
 }
 
