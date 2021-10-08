@@ -24,14 +24,6 @@ import java.util.Map;
 public class MyMQConfig {
 
 
-    @RabbitListener(queues = "order.release.order.queue")
-    public void listener(OrderEntity entity, Channel channel, Message message) throws IOException {
-        System.out.println("收到过期的清单信息：准备关闭信息" + entity.getOrderSn());
-        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
-
-    }
-
-
     /**
      * @Bean Binding Queue Exchange 都会自动创建（RabbitMQ没有的情况）
      * <p>
@@ -91,12 +83,29 @@ public class MyMQConfig {
 
     @Bean
     public Binding orderReleaseOrderBinding(MyRabbitConfigProperties rabbitConfigProperties) {
-        HashMap<String, Object> arguments = new HashMap<>();
+
         Binding binding = new Binding(
                 rabbitConfigProperties.getNormalQueue(),
                 Binding.DestinationType.QUEUE,
                 rabbitConfigProperties.getEventExchange(),
                 rabbitConfigProperties.getLetterRoutingKey(),
+                null);
+        return binding;
+    }
+
+    /**
+     * 订单释放直接和库存释放进行绑定
+     * @param rabbitConfigProperties
+     * @return
+     */
+    @Bean
+    public Binding stockReleaseOtherBinding(MyRabbitConfigProperties rabbitConfigProperties) {
+
+        Binding binding = new Binding(
+                "stock.release.stock.queue",
+                Binding.DestinationType.QUEUE,
+                rabbitConfigProperties.getEventExchange(),
+                "order.release.other.#",
                 null);
         return binding;
     }

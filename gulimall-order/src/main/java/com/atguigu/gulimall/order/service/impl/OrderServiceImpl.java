@@ -2,10 +2,12 @@ package com.atguigu.gulimall.order.service.impl;
 
 import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.exception.NoStockException;
+import com.atguigu.common.to.mq.OrderTo;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.Query;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.vo.MemberRespVo;
+import com.atguigu.gulimall.order.config.MyRabbitConfigProperties;
 import com.atguigu.gulimall.order.constant.OrderConstant;
 import com.atguigu.gulimall.order.dao.OrderDao;
 import com.atguigu.gulimall.order.entity.OrderEntity;
@@ -24,8 +26,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.databind.util.BeanUtil;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -51,6 +57,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     private ThreadLocal<OrderSubmitVo> confirmVoThreadLocal = new ThreadLocal<>();
 
     @Autowired
+    RabbitTemplate rabbitTemplate;
+
+    @Autowired
     MemberFeignService memberFeignService;
 
     @Autowired
@@ -69,6 +78,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     @Autowired
     OrderItemService orderItemService;
+
+    @Autowired
+    MyRabbitConfigProperties myRabbitConfigProperties;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -160,12 +172,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         int i = 10 / 0;
     }
 
-    @Transactional(propagation = Propagation.REQUIRED,timeout = 2)
+    @Transactional(propagation = Propagation.REQUIRED, timeout = 2)
     public void b() {
 
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW,timeout = 20)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, timeout = 20)
     public void c() {
 
     }
@@ -174,7 +186,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     // 分布式事务：最大原因，网络问题+分布式机器。
     //(isolation = Isolation.REPEATABLE_READ )
 
-//    @GlobalTransactional// 高并发不适合
+    //    @GlobalTransactional// 高并发不适合
     @Transactional
     @Override
     public SubmitOrderResponseVo submitOrder(OrderSubmitVo orderSubmitVo) {
@@ -235,7 +247,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                     // 锁成功
                     response.setOrder(order.getOrder());
                     // todo 5、远程扣减积分 出异常
-                    int i = 10 / 0;// 订单回滚，库存不滚
+//                    int i = 10 / 0;// 订单回滚，库存不滚
+                    //todo 订单创建成功发送消息给MQ
+
+                    rabbitTemplate.convertAndSend(
+                            myRabbitConfigProperties.getEventExchange(),
+                            myRabbitConfigProperties.getRoutingKey(),
+                            order.getOrder());
                     return response;
                 } else {
                     // 锁定失败
@@ -269,6 +287,34 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
         OrderEntity order_sn = this.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderSn));
         return order_sn;
+    }
+
+    @Override
+    public void closeOrder(OrderEntity entity) {
+        // 查询这个订单的最新状态
+
+        OrderEntity orderEntity = this.getById(entity.getId());
+        if (orderEntity.getStatus() == OrderStatusEnum.CREATE_NEW.getCode()) {
+            // 关单
+            OrderEntity update = new OrderEntity();
+            update.setId(orderEntity.getId());
+            update.setStatus(OrderStatusEnum.CANCLED.getCode());
+            this.updateById(update);
+            // 发给MQ一个
+            OrderTo orderTo = new OrderTo();
+            BeanUtils.copyProperties(orderEntity, orderTo);
+            try {
+                // TODO: 2021/10/8 保证消息一定会发送出去,每一个消息都可以做好日志记录。（给数据库保存每一个消息的详细信息）。
+                // TODO: 2021/10/8 定期扫描数据库，将失败的消息再发一遍 
+                rabbitTemplate.convertAndSend(myRabbitConfigProperties.getEventExchange(), "order.release.other", orderTo);
+            } catch (Exception e) {
+                // TODO: 2021/10/8 将没发送成功的消息进行重试发送
+//                while)
+
+            }
+
+        }
+
     }
 
     /**
