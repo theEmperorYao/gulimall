@@ -1,16 +1,13 @@
-package com.atguigu.gulimall.order.interceptor;
+package com.atguigu.gulimall.member.interceptor;
 
 import com.atguigu.common.constant.AuthServerConstant;
 import com.atguigu.common.vo.MemberRespVo;
-import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @Classname LoginUserInterceptor
@@ -26,14 +23,10 @@ public class LoginUserInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
-
         // /order/order/status/34343434343
         String requestURI = request.getRequestURI();
-        AntPathMatcher antPathMatcher = new AntPathMatcher();
-        boolean match = antPathMatcher.match("/order/order/status/**", requestURI);
-        boolean match1 = antPathMatcher.match("/payed/notify", requestURI);
-
-        if (match || match1) {
+        boolean match = new AntPathMatcher().match("/member/**", requestURI);
+        if (match) {
             return true;
         }
 
