@@ -21,8 +21,6 @@ spring:
           filters:
             - RewritePath=/api/(?<segment>/?.*), /$\{segment}
 
-
-
         #        http://localhost:88/api/thirdparty/oss/policy
         - id: third_party_route
           uri: lb://gulimall-third-party
@@ -82,6 +80,10 @@ spring:
           predicates:
             - Host=member.gulimall.com
 
+        - id: gulimall_seckill_route
+          uri: lb://gulimall-seckill
+          predicates:
+            - Host=seckill.gulimall.com
 
 
 
