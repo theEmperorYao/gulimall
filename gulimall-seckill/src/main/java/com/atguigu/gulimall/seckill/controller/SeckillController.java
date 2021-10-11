@@ -4,11 +4,13 @@ import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.seckill.service.SeckillService;
 import com.atguigu.gulimall.seckill.to.SeckillSkuRedisTo;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.annotations.Select;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 
@@ -33,7 +35,7 @@ public class SeckillController {
     @ResponseBody
     @GetMapping("/currentSeckillSkus")
     public R getCurrentSeckillSkus() {
-
+        log.info("currentSeckillSkus正在执行");
         List<SeckillSkuRedisTo> vos = seckillService.getCurrentSeckillSkus();
         return R.ok().setData(vos);
     }
