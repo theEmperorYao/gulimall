@@ -47,8 +47,6 @@ public class SeckillSkuRedisTo {
      */
     private Integer seckillSort;
 
-    // sku 详细信息
-    private SkuInfoVo skuInfoVo;
 
     /**
      * 当前商品秒杀的开始时间
@@ -59,6 +57,8 @@ public class SeckillSkuRedisTo {
      */
     private Long endTime;
 
+    // sku 详细信息
+    private SkuInfoVo skuInfoVo;
 
 
 }

@@ -95,6 +95,7 @@ public class MyMQConfig {
 
     /**
      * 订单释放直接和库存释放进行绑定
+     *
      * @param rabbitConfigProperties
      * @return
      */
@@ -108,6 +109,23 @@ public class MyMQConfig {
                 "order.release.other.#",
                 null);
         return binding;
+    }
+
+
+    @Bean
+    public Queue orderSecKillQueue(MyRabbitConfigProperties rabbitConfigProperties) {
+        return new Queue(rabbitConfigProperties.getSecKillQueue(), true, false, false);
+    }
+
+    @Bean
+    public Binding orderSeckillOrderQueueBinding(MyRabbitConfigProperties rabbitConfigProperties) {
+
+        return new Binding(
+                rabbitConfigProperties.getSecKillQueue(),
+                Binding.DestinationType.QUEUE,
+                rabbitConfigProperties.getEventExchange(),
+                rabbitConfigProperties.getSecKillRoutingKey(),
+                null);
     }
 
 

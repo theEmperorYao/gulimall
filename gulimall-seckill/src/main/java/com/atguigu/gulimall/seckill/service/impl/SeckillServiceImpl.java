@@ -2,23 +2,35 @@ package com.atguigu.gulimall.seckill.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.atguigu.common.to.mq.SecKillOrderTo;
 import com.atguigu.common.utils.R;
+import com.atguigu.common.vo.MemberRespVo;
+import com.atguigu.gulimall.seckill.config.MyRabbitConfigProperties;
 import com.atguigu.gulimall.seckill.feign.CouponFeignService;
 import com.atguigu.gulimall.seckill.feign.ProductFeignService;
+import com.atguigu.gulimall.seckill.interceptor.LoginUserInterceptor;
 import com.atguigu.gulimall.seckill.service.SeckillService;
 import com.atguigu.gulimall.seckill.to.SeckillSkuRedisTo;
 import com.atguigu.gulimall.seckill.vo.SeckillSessionWithSkus;
 import com.atguigu.gulimall.seckill.vo.SkuInfoVo;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import org.redisson.api.RSemaphore;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.BoundHashOperations;
-import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import java.util.*;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -42,6 +54,12 @@ public class SeckillServiceImpl implements SeckillService {
 
     @Autowired
     RedissonClient redissonClient;
+
+    @Autowired
+    RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    MyRabbitConfigProperties myRabbitConfigProperties;
 
     private final String SESSIONS_CACHE_PREFIX = "seckill:sessions:";
     private final String SKUKILL_CACHE_PREFIX = "seckill:skus:";
@@ -122,7 +140,7 @@ public class SeckillServiceImpl implements SeckillService {
                     SeckillSkuRedisTo skuRedisTo = JSON.parseObject(json, SeckillSkuRedisTo.class);
                     // 随机码
                     long current = new Date().getTime();
-                    if (current >= skuRedisTo.getStartTime() && current <= skuRedisTo.getEndTime()) {
+                    if (current <= skuRedisTo.getStartTime() && current >= skuRedisTo.getEndTime()) {
                         skuRedisTo.setRandomCode(null);
                     }
                     return skuRedisTo;
@@ -130,6 +148,80 @@ public class SeckillServiceImpl implements SeckillService {
             }
         }
 
+        return null;
+    }
+
+    // todo 上架秒杀商品的时候，每一个数据都有过期时间。
+    // todo 秒杀后续的流程，简化了收货地址等信息。
+    @Override
+    public String kill(String killId, String key, Integer num) {
+
+        MemberRespVo memberRespVo = LoginUserInterceptor.loginUser.get();
+
+        //1、获取当前秒杀商品的详细信息
+        BoundHashOperations<String, String, String> hashOps = redisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
+
+        //7_1
+        String json = hashOps.get(killId);
+
+        if (StringUtils.isEmpty(json)) {
+            return null;
+        } else {
+            SeckillSkuRedisTo redisTo = JSON.parseObject(json, SeckillSkuRedisTo.class);
+            //校验合法性
+            Long startTime = redisTo.getStartTime();
+            Long endTime = redisTo.getEndTime();
+            long current = new Date().getTime();
+
+            long ttl = endTime - current;
+
+            //1、校验时间的合法性
+            if (current >= startTime && current <= endTime) {
+                //2、校验随机码， 和商品id
+                String randomCode = redisTo.getRandomCode();
+                String s = redisTo.getPromotionSessionId() + "_" + redisTo.getSkuId();
+                if (randomCode.equals(key) && killId.equals(s)) {
+                    //3、验证购物的数量是否合理
+                    if (num <= redisTo.getSeckillLimit().intValue()) {
+                        //4、验证这个人是否已经购买过了。幂等性处理，如果秒杀成功，就去占位 userId_SessionId_skuId
+                        String redisKey = memberRespVo.getId() + "_" + redisTo.getPromotionSessionId() + "_" + redisTo.getSkuId();
+                        // 自动过期
+                        Boolean aBoolean = redisTemplate.opsForValue().setIfAbsent(redisKey, num.toString(), ttl, TimeUnit.MILLISECONDS);
+                        if (aBoolean) {
+                            //占位成功说明从来没有买过
+                            RSemaphore semaphore = redissonClient.getSemaphore(SKU_STOCK_SEMAPHORE + randomCode);
+
+                            boolean b = semaphore.tryAcquire(num);
+                            //秒杀成功
+                            // 快速下单 发送MQ消息
+                            if (b) {
+                                String orderSn = IdWorker.getTimeId();
+                                SecKillOrderTo secKillOrderTo = new SecKillOrderTo();
+                                secKillOrderTo.setOrderSn(orderSn);
+                                secKillOrderTo.setMemberId(memberRespVo.getId());
+                                secKillOrderTo.setNum(num);
+                                secKillOrderTo.setPromotionSessionId(redisTo.getPromotionSessionId());
+                                secKillOrderTo.setSkuId(redisTo.getSkuId());
+                                secKillOrderTo.setSeckillPrice(redisTo.getSeckillPrice());
+                                rabbitTemplate.convertAndSend(myRabbitConfigProperties.getEventExchange(), "order.seckill.order", secKillOrderTo);
+                                return orderSn;
+                            }
+                            return null;
+
+                        } else {
+                            // 说明已经买过了
+                            return null;
+                        }
+
+                    }
+
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        }
         return null;
     }
 

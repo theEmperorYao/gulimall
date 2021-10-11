@@ -1,4 +1,4 @@
-package com.atguigu.gulimall.order.config;
+package com.atguigu.gulimall.seckill.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -20,15 +20,11 @@ public class MyRabbitConfigProperties {
 
     private String delayQueue;
 
-    private String secKillQueue;
-
     private String eventExchange;
 
     private String routingKey;
 
     private String letterRoutingKey;
-
-    private String secKillRoutingKey;
 
     private Integer ttl;
 

@@ -3,6 +3,7 @@ package com.atguigu.gulimall.order.service.impl;
 import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.exception.NoStockException;
 import com.atguigu.common.to.mq.OrderTo;
+import com.atguigu.common.to.mq.SecKillOrderTo;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.Query;
 import com.atguigu.common.utils.R;
@@ -384,11 +385,34 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         if (tradeStatus.equals("TRADE_SUCCESS") || tradeStatus.equals("TRADE_FINISHED")) {
             // 支付成功状态
             String outTradeNo = vo.getTrade_no();
-            this.baseMapper.updateOrderStatus(outTradeNo,OrderStatusEnum.PAYED.getCode());
+            this.baseMapper.updateOrderStatus(outTradeNo, OrderStatusEnum.PAYED.getCode());
         }
         return "success";
     }
 
+    @Override
+    public void createSecKillOrder(SecKillOrderTo secKillOrder) {
+        // todo 保存订单信息
+        OrderEntity orderEntity = new OrderEntity();
+        orderEntity.setOrderSn(secKillOrder.getOrderSn());
+        orderEntity.setMemberId(secKillOrder.getMemberId());
+
+        orderEntity.setStatus(OrderStatusEnum.CREATE_NEW.getCode());
+        BigDecimal multiply = secKillOrder.getSeckillPrice().multiply(new BigDecimal(secKillOrder.getNum()));
+        orderEntity.setPayAmount(multiply);
+        this.save(orderEntity);
+
+        // TODO: 2021/10/11  保存订单项信息
+        OrderItemEntity orderItemEntity = new OrderItemEntity();
+        orderItemEntity.setOrderSn(secKillOrder.getOrderSn());
+        orderItemEntity.setRealAmount(multiply);
+        orderItemEntity.setSkuQuantity(secKillOrder.getNum());
+        //  todo 获取当前sku的详细信息进行设置   productFeignService.getSpuInfoBySkuId()
+
+        orderItemService.save(orderItemEntity);
+
+
+    }
 
 
     /**
