@@ -99,11 +99,10 @@ public class SeckillServiceImpl implements SeckillService {
     /**
      * 返回当前时间可以参与秒杀的商品信息
      *
-     * @SentinelResource 还提供了其它额外的属性如 blockHandler，blockHandlerClass，fallback 用于表示限流或降级的操作（注意有方法签名要求）
-     *
      * @return
+     * @SentinelResource 还提供了其它额外的属性如 blockHandler，blockHandlerClass，fallback 用于表示限流或降级的操作（注意有方法签名要求）
      */
-    @SentinelResource(value = "getCurrentSeckillSkusResource",blockHandler = "blockHandler")
+    @SentinelResource(value = "getCurrentSeckillSkusResource", blockHandler = "blockHandler")
     @Override
     public List<SeckillSkuRedisTo> getCurrentSeckillSkus() {
 
@@ -137,7 +136,7 @@ public class SeckillServiceImpl implements SeckillService {
 
             }
         } catch (BlockException exception) {
-            log.error("资源被限流{}",exception.getMessage());
+            log.error("资源被限流{}", exception.getMessage());
         }
 
 
@@ -145,7 +144,6 @@ public class SeckillServiceImpl implements SeckillService {
 
         return null;
     }
-
 
 
     @Override
@@ -250,6 +248,10 @@ public class SeckillServiceImpl implements SeckillService {
 
     private void saveSessionInfos(List<SeckillSessionWithSkus> sessionData) {
 
+        if (sessionData == null) {
+            return;
+        }
+
         sessionData.stream().forEach(session -> {
             Long startTime = session.getStartTime().getTime();
             Long endTime = session.getEndTime().getTime();
@@ -270,6 +272,11 @@ public class SeckillServiceImpl implements SeckillService {
     }
 
     private void saveSessionSkuInfos(List<SeckillSessionWithSkus> sessionData) {
+
+        if (sessionData == null) {
+            return;
+        }
+
         sessionData.stream().forEach(session -> {
             // 准备hash操作
             BoundHashOperations<String, Object, Object> ops = redisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);

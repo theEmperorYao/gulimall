@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.atguigu.gulimall.search.config.GulimallElasticSearchConfig;
 import lombok.Data;
 import lombok.ToString;
-import net.minidev.json.JSONArray;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
