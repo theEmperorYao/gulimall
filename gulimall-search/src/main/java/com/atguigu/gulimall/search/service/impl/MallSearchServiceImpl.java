@@ -216,13 +216,13 @@ public class MallSearchServiceImpl implements MallSearchService {
             // TODO 远程查询所有品牌
             R r = productFeignService.brandInfo(searchParam.getBrandId());
             if (r.getCode() == 0) {
-                List<BrandVo> brand = r.getData("data", new TypeReference<List<BrandVo>>() {
+                List<BrandVo> brand = r.getData("brand", new TypeReference<List<BrandVo>>() {
                 });
                 StringBuffer buffer = new StringBuffer();
                 // 替换所有品牌ID
                 String replace = "";
                 for (BrandVo brandVo : brand) {
-                    buffer.append(brandVo.getBrandName() + ";");
+                    buffer.append(brandVo.getName() + ";");
                     replace = replaceQueryString(searchParam, brandVo.getBrandId() + "", "brandId");
                 }
                 navVo.setNavValue(buffer.toString());
