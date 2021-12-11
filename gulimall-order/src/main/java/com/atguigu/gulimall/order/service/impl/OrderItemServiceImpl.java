@@ -24,7 +24,6 @@ import com.atguigu.common.utils.Query;
 import com.atguigu.gulimall.order.dao.OrderItemDao;
 import com.atguigu.gulimall.order.entity.OrderItemEntity;
 import com.atguigu.gulimall.order.service.OrderItemService;
-
 @RabbitListener(queues = {"hello-java-queue"})
 @Service("orderItemService")
 public class OrderItemServiceImpl extends ServiceImpl<OrderItemDao, OrderItemEntity> implements OrderItemService {
@@ -74,19 +73,19 @@ public class OrderItemServiceImpl extends ServiceImpl<OrderItemDao, OrderItemEnt
         System.out.println("deliveryTag = " + deliveryTag);
         // 签收货物，非批量模式
         try {
-            if (deliveryTag % 2 == 0){
+            if (deliveryTag % 2 == 0) {
                 //收货
                 channel.basicAck(deliveryTag, false);
                 System.out.println("签收了货物。。。" + deliveryTag);
-            }else {
+            } else {
                 //退货 requeue=false 丢弃  requeue=true 发回服务器，服务器重新入队
                 //basicNack(long deliveryTag, boolean multiple, boolean requeue)
-                channel.basicNack(deliveryTag,false,true);
+                channel.basicNack(deliveryTag, false, true);
                 //basicReject(long deliveryTag, boolean requeue)
 //                channel.basicReject();
 
 
-                System.out.println("没有签收货物。。。"+deliveryTag);
+                System.out.println("没有签收货物。。。" + deliveryTag);
             }
 
         } catch (IOException e) {

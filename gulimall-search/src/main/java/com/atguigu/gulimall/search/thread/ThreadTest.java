@@ -1,4 +1,4 @@
-package com.firenayl.mall.search.thread;
+package com.atguigu.gulimall.search.thread;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -102,31 +102,31 @@ public class ThreadTest {
         /**
          * 两任务合并
          */
-//		CompletableFuture<Object> async1 = CompletableFuture.supplyAsync(() -> {
-//			System.out.println("任务1线程" + Thread.currentThread().getId());
-//			int i = 10 / 2;
-//			System.out.println("任务1结束" + i);
-//			return i;
-//		}, service);
-//
-//		CompletableFuture<Object> async2 = CompletableFuture.supplyAsync(() -> {
-//			System.out.println("任务2线程" + Thread.currentThread().getId());
-//			int i = 10 / 2;
-//			try {
-//				Thread.sleep(2000);
-//			} catch (InterruptedException e) {
-//				e.printStackTrace();
-//			}
-//			System.out.println("任务2结束" + i);
-//			return "任务合并";
-//		}, service);
+		CompletableFuture<Object> async1 = CompletableFuture.supplyAsync(() -> {
+			System.out.println("任务1线程" + Thread.currentThread().getId());
+			int i = 10 / 2;
+			System.out.println("任务1结束" + i);
+			return i;
+		}, service);
 
-        // 合并上面两个任务 这个不能感知结果
+		CompletableFuture<Object> async2 = CompletableFuture.supplyAsync(() -> {
+			System.out.println("任务2线程" + Thread.currentThread().getId());
+			int i = 10 / 2;
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			System.out.println("任务2结束" + i);
+			return "任务合并";
+		}, service);
+
+//         合并上面两个任务 这个不能感知结果
 //		async1.runAfterBothAsync(async2,() ->{
 //			System.out.println("任务3开始...");
 //		} ,service);
 
-        // 合并上面两个任务 可以感知前面任务的结果
+//         合并上面两个任务 可以感知前面任务的结果
 //		async1.thenAcceptBothAsync(async2,(res1, res2) -> {
 //			System.out.println("任务3开始... 任务1的结果：" + res1 + "任务2的结果：" + res2);
 //		},service);
@@ -158,40 +158,40 @@ public class ThreadTest {
 //		}, service);
 //		System.out.println("任务3返回的结果：" + async.get());
 
-
-        CompletableFuture<String> img = CompletableFuture.supplyAsync(() -> {
-            System.out.println("查询商品图片信息");
-            return "1.jpg";
-        },service);
-
-        CompletableFuture<String> attr = CompletableFuture.supplyAsync(() -> {
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            System.out.println("查询商品属性");
-            return "麒麟990 5G  钛空银";
-        },service);
-
-
-        CompletableFuture<String> desc = CompletableFuture.supplyAsync(() -> {
-            System.out.println("查询商品介绍");
-            return "华为";
-        },service);
-
-        /**
-         * 等这三个都做完
-         */
-		CompletableFuture<Void> allOf = CompletableFuture.allOf(img, attr, desc);
-		allOf.join();
 //
-//		System.out.println("main....end"  + desc.get() + attr.get() + img.get());
-
-        CompletableFuture<Object> anyOf = CompletableFuture.anyOf(img, attr, desc);
-        anyOf.get();
-
-        System.out.println("main....end" + anyOf.get());
-        service.shutdown();
+//        CompletableFuture<String> img = CompletableFuture.supplyAsync(() -> {
+//            System.out.println("查询商品图片信息");
+//            return "1.jpg";
+//        },service);
+//
+//        CompletableFuture<String> attr = CompletableFuture.supplyAsync(() -> {
+//            try {
+//                Thread.sleep(2000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//            System.out.println("查询商品属性");
+//            return "麒麟990 5G  钛空银";
+//        },service);
+//
+//
+//        CompletableFuture<String> desc = CompletableFuture.supplyAsync(() -> {
+//            System.out.println("查询商品介绍");
+//            return "华为";
+//        },service);
+//
+//        /**
+//         * 等这三个都做完
+//         */
+//		CompletableFuture<Void> allOf = CompletableFuture.allOf(img, attr, desc);
+//		allOf.join();
+////
+////		System.out.println("main....end"  + desc.get() + attr.get() + img.get());
+//
+//        CompletableFuture<Object> anyOf = CompletableFuture.anyOf(img, attr, desc);
+//        anyOf.get();
+//
+//        System.out.println("main....end" + anyOf.get());
+//        service.shutdown();
     }
 }
